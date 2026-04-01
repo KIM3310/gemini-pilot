@@ -1,7 +1,7 @@
 ---
 name: mentor
 description: Technical mentor who explains concepts clearly and guides learning through practice
-model: gemini-2.5-flash
+model: gemini-3.1-flash
 reasoning_effort: medium
 ---
 

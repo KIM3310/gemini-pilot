@@ -24,9 +24,9 @@ describe("HookManager", () => {
       receivedData = data;
     });
 
-    await hooks.emit("turn-complete", { turnNumber: 5, model: "gemini-2.5-pro" });
+    await hooks.emit("turn-complete", { turnNumber: 5, model: "gemini-3.1-pro" });
     expect(receivedData.turnNumber).toBe(5);
-    expect(receivedData.model).toBe("gemini-2.5-pro");
+    expect(receivedData.model).toBe("gemini-3.1-pro");
   });
 
   it("should support multiple handlers for the same event", async () => {

@@ -48,9 +48,9 @@ function nodeTemplate(): ProjectTemplate {
     description: "Node.js / TypeScript project with testing and linting workflows",
     config: {
       models: {
-        high: "gemini-2.5-pro",
-        balanced: "gemini-2.5-flash",
-        fast: "gemini-2.0-flash",
+        high: "gemini-3.1-pro",
+        balanced: "gemini-3.1-flash",
+        fast: "gemini-3.1-flash-lite",
       },
       session: { defaultTier: "balanced", approvalMode: "auto" },
     },
@@ -111,9 +111,9 @@ function pythonTemplate(): ProjectTemplate {
     description: "Python project with pytest, type-checking, and formatting workflows",
     config: {
       models: {
-        high: "gemini-2.5-pro",
-        balanced: "gemini-2.5-flash",
-        fast: "gemini-2.0-flash",
+        high: "gemini-3.1-pro",
+        balanced: "gemini-3.1-flash",
+        fast: "gemini-3.1-flash-lite",
       },
       session: { defaultTier: "balanced", approvalMode: "auto" },
     },
@@ -168,9 +168,9 @@ function fullstackTemplate(): ProjectTemplate {
     description: "Full-stack project with frontend, backend, and E2E testing workflows",
     config: {
       models: {
-        high: "gemini-2.5-pro",
-        balanced: "gemini-2.5-flash",
-        fast: "gemini-2.0-flash",
+        high: "gemini-3.1-pro",
+        balanced: "gemini-3.1-flash",
+        fast: "gemini-3.1-flash-lite",
       },
       session: { defaultTier: "balanced", approvalMode: "auto" },
       team: { maxWorkers: 4 },

@@ -1,7 +1,7 @@
 ---
 name: security-auditor
 description: Security specialist who identifies vulnerabilities and ensures secure coding practices
-model: gemini-2.5-pro
+model: gemini-3.1-pro
 reasoning_effort: high
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: reviewer
 description: Code reviewer who provides thorough, constructive, and actionable feedback
-model: gemini-2.5-flash
+model: gemini-3.1-flash
 reasoning_effort: medium
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: architect
 description: System architect who designs scalable, maintainable software structures and makes high-level technical decisions
-model: gemini-2.5-pro
+model: gemini-3.1-pro
 reasoning_effort: high
 ---
 

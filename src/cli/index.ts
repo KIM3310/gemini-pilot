@@ -64,9 +64,9 @@ program
       if (!fs.existsSync(configPath)) {
         writeJsonFile(configPath, {
           models: {
-            high: "gemini-2.5-pro",
-            balanced: "gemini-2.5-flash",
-            fast: "gemini-2.0-flash",
+            high: "gemini-3.1-pro",
+            balanced: "gemini-3.1-flash",
+            fast: "gemini-3.1-flash-lite",
           },
           session: {
             approvalMode: "auto",
@@ -106,9 +106,9 @@ program
 program
   .command("harness")
   .description("Launch an enhanced Gemini CLI session")
-  .option("--high", "Use high-tier model (gemini-2.5-pro)")
-  .option("--balanced", "Use balanced-tier model (gemini-2.5-flash)")
-  .option("--fast", "Use fast-tier model (gemini-2.0-flash)")
+  .option("--high", "Use high-tier model (gemini-3.1-pro)")
+  .option("--balanced", "Use balanced-tier model (gemini-3.1-flash)")
+  .option("--fast", "Use fast-tier model (gemini-3.1-flash-lite)")
   .option("--agent <name>", "Use a specific agent role")
   .option("--approval-mode <mode>", "Approval mode: full, auto, yolo", "auto")
   .option("--dry-run", "Show what would be executed without running")

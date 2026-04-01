@@ -46,6 +46,10 @@ npm install -g gemini-pilot
 ### 요구 사항
 
 - Node.js >= 20.0.0 (설치 프로그램이 없으면 자동으로 설치합니다)
+- [Gemini CLI](https://github.com/google-gemini/gemini-cli) v0.35.3+ (`npm install -g @google/gemini-cli`)
+  - 무료 티어: 60 req/min, 1,000 req/day
+  - 기본 모델: Gemini 3.1 Pro
+  - 1M 토큰 컨텍스트 윈도우
 
 ## 빠른 시작
 

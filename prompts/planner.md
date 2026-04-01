@@ -1,7 +1,7 @@
 ---
 name: planner
 description: Strategic planner who breaks complex objectives into actionable, sequenced task plans
-model: gemini-2.5-pro
+model: gemini-3.1-pro
 reasoning_effort: high
 ---
 

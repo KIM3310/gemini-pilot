@@ -13,9 +13,9 @@ import { validateConfig, loadConfig, loadAndValidateConfigFile } from "../src/co
 describe("Config Schema", () => {
   it("should parse default config correctly", () => {
     const config = GeminiPilotConfigSchema.parse({});
-    expect(config.models.high).toBe("gemini-2.5-pro");
-    expect(config.models.balanced).toBe("gemini-2.5-flash");
-    expect(config.models.fast).toBe("gemini-2.0-flash");
+    expect(config.models.high).toBe("gemini-3.1-pro");
+    expect(config.models.balanced).toBe("gemini-3.1-flash");
+    expect(config.models.fast).toBe("gemini-3.1-flash-lite");
     expect(config.session.approvalMode).toBe("auto");
     expect(config.session.defaultTier).toBe("balanced");
   });
@@ -38,7 +38,7 @@ describe("Config Schema", () => {
   });
 
   it("should have correct default values in DEFAULT_CONFIG", () => {
-    expect(DEFAULT_CONFIG.models.high).toBe("gemini-2.5-pro");
+    expect(DEFAULT_CONFIG.models.high).toBe("gemini-3.1-pro");
     expect(DEFAULT_CONFIG.team.maxWorkers).toBe(4);
     expect(DEFAULT_CONFIG.session.maxTurns).toBe(50);
   });

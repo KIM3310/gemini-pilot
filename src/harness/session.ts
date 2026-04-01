@@ -103,7 +103,7 @@ export function buildSystemPrompt(options: {
  *
  * @param config - Gemini Pilot configuration
  * @param tier - Desired model quality tier
- * @returns Model identifier string (e.g. "gemini-2.5-pro")
+ * @returns Model identifier string (e.g. "gemini-3.1-pro")
  */
 export function resolveModel(config: GeminiPilotConfig, tier: ModelTier): string {
   return config.models[tier];

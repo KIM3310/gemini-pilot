@@ -32,8 +32,8 @@ export type AgentDefinition = z.infer<typeof AgentDefinitionSchema>;
  * @returns The inferred model tier
  */
 function modelToTier(model: string): ModelTier {
-  if (model.includes("2.5-pro")) return "high";
-  if (model.includes("2.5-flash")) return "balanced";
+  if (model.includes("3.1-pro")) return "high";
+  if (model.includes("3.1-flash") && !model.includes("flash-lite")) return "balanced";
   return "fast";
 }
 

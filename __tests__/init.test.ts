@@ -69,7 +69,7 @@ describe("applyTemplate", () => {
     const config = JSON.parse(
       fs.readFileSync(path.join(tmpDir, ".gemini-pilot", "config.json"), "utf-8"),
     );
-    expect(config.models.high).toBe("gemini-2.5-pro");
+    expect(config.models.high).toBe("gemini-3.1-pro");
   });
 
   it("should initialize memory with template tech stack", () => {

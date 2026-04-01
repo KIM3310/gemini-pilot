@@ -19,7 +19,7 @@ describe("Agent Resolution", () => {
 
     expect(agent.name).toBe("architect");
     expect(agent.tier).toBe("high");
-    expect(agent.model).toBe("gemini-2.5-pro");
+    expect(agent.model).toBe("gemini-3.1-pro");
     expect(agent.reasoningEffort).toBe("high");
     expect(agent.systemPrompt).toContain("Architect Agent");
   });
@@ -29,11 +29,11 @@ describe("Agent Resolution", () => {
 
     const executor = resolveAgent(prompts.get("executor")!, DEFAULT_CONFIG.models);
     expect(executor.tier).toBe("balanced");
-    expect(executor.model).toBe("gemini-2.5-flash");
+    expect(executor.model).toBe("gemini-3.1-flash");
 
     const architect = resolveAgent(prompts.get("architect")!, DEFAULT_CONFIG.models);
     expect(architect.tier).toBe("high");
-    expect(architect.model).toBe("gemini-2.5-pro");
+    expect(architect.model).toBe("gemini-3.1-pro");
   });
 });
 
@@ -42,7 +42,7 @@ describe("AgentDefinitionSchema", () => {
     const result = AgentDefinitionSchema.safeParse({
       name: "test-agent",
       description: "A test agent",
-      model: "gemini-2.5-pro",
+      model: "gemini-3.1-pro",
       tier: "high",
       reasoningEffort: "high",
       systemPrompt: "You are a test agent.",
@@ -69,7 +69,7 @@ describe("AgentRegistry", () => {
     registry.register({
       name: "test",
       description: "Test agent",
-      model: "gemini-2.5-flash",
+      model: "gemini-3.1-flash",
       tier: "balanced",
       reasoningEffort: "medium",
       systemPrompt: "You are a test agent.",
@@ -77,7 +77,7 @@ describe("AgentRegistry", () => {
 
     expect(registry.size).toBe(1);
     expect(registry.has("test")).toBe(true);
-    expect(registry.get("test")?.model).toBe("gemini-2.5-flash");
+    expect(registry.get("test")?.model).toBe("gemini-3.1-flash");
   });
 
   it("should build a complete registry from prompts", () => {

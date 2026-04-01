@@ -19,7 +19,7 @@ const log = createLogger("prompts");
 export const PromptFrontmatterSchema = z.object({
   name: z.string(),
   description: z.string(),
-  model: z.string().default("gemini-2.5-flash"),
+  model: z.string().default("gemini-3.1-flash"),
   reasoning_effort: z.enum(["low", "medium", "high"]).default("medium"),
 });
 

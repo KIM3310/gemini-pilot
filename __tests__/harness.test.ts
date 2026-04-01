@@ -8,9 +8,9 @@ import { DEFAULT_CONFIG } from "../src/config/schema.js";
 
 describe("Session Harness", () => {
   it("should resolve models from config by tier", () => {
-    expect(resolveModel(DEFAULT_CONFIG, "high")).toBe("gemini-2.5-pro");
-    expect(resolveModel(DEFAULT_CONFIG, "balanced")).toBe("gemini-2.5-flash");
-    expect(resolveModel(DEFAULT_CONFIG, "fast")).toBe("gemini-2.0-flash");
+    expect(resolveModel(DEFAULT_CONFIG, "high")).toBe("gemini-3.1-pro");
+    expect(resolveModel(DEFAULT_CONFIG, "balanced")).toBe("gemini-3.1-flash");
+    expect(resolveModel(DEFAULT_CONFIG, "fast")).toBe("gemini-3.1-flash-lite");
   });
 
   it("should build system prompt with agent context", () => {
@@ -18,7 +18,7 @@ describe("Session Harness", () => {
       agent: {
         name: "architect",
         description: "System architect",
-        model: "gemini-2.5-pro",
+        model: "gemini-3.1-pro",
         tier: "high",
         reasoningEffort: "high",
         systemPrompt: "You are a senior architect.",
@@ -68,16 +68,16 @@ describe("Session Harness", () => {
 describe("Gemini CLI Args Builder", () => {
   it("should include model flag", () => {
     const args = buildGeminiArgs({
-      model: "gemini-2.5-pro",
+      model: "gemini-3.1-pro",
       approvalMode: "auto",
     });
     expect(args).toContain("--model");
-    expect(args).toContain("gemini-2.5-pro");
+    expect(args).toContain("gemini-3.1-pro");
   });
 
   it("should include sandbox flag for yolo mode", () => {
     const args = buildGeminiArgs({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.1-flash",
       approvalMode: "yolo",
     });
     expect(args).toContain("--sandbox=false");
@@ -85,7 +85,7 @@ describe("Gemini CLI Args Builder", () => {
 
   it("should not include sandbox flag for auto mode", () => {
     const args = buildGeminiArgs({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.1-flash",
       approvalMode: "auto",
     });
     expect(args).not.toContain("--sandbox=false");
@@ -93,7 +93,7 @@ describe("Gemini CLI Args Builder", () => {
 
   it("should include system prompt when provided", () => {
     const args = buildGeminiArgs({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.1-flash",
       approvalMode: "auto",
       systemPrompt: "You are helpful",
     });

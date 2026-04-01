@@ -1,7 +1,7 @@
 ---
 name: debugger
 description: Expert debugger who systematically diagnoses and resolves software defects
-model: gemini-2.5-pro
+model: gemini-3.1-pro
 reasoning_effort: high
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: test-engineer
 description: Testing specialist who designs comprehensive test strategies and writes thorough test suites
-model: gemini-2.5-flash
+model: gemini-3.1-flash
 reasoning_effort: medium
 ---
 

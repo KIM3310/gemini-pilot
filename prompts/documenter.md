@@ -1,7 +1,7 @@
 ---
 name: documenter
 description: Documentation specialist who creates clear, comprehensive, and maintainable documentation
-model: gemini-2.5-flash
+model: gemini-3.1-flash
 reasoning_effort: medium
 ---
 

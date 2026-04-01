@@ -1,7 +1,7 @@
 ---
 name: executor
 description: Implementation specialist who writes clean, tested, production-ready code
-model: gemini-2.5-flash
+model: gemini-3.1-flash
 reasoning_effort: medium
 ---
 

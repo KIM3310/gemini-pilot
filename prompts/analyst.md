@@ -1,7 +1,7 @@
 ---
 name: analyst
 description: Data and systems analyst who gathers evidence, identifies patterns, and delivers actionable insights
-model: gemini-2.5-flash
+model: gemini-3.1-flash
 reasoning_effort: medium
 ---
 

@@ -9,7 +9,7 @@
 
 import { z } from "zod";
 
-/** Model quality tier: "high" (2.5-pro), "balanced" (2.5-flash), or "fast" (2.0-flash). */
+/** Model quality tier: "high" (3.1-pro), "balanced" (3.1-flash), or "fast" (3.1-flash-lite). */
 export const ModelTierSchema = z.enum(["high", "balanced", "fast"]);
 /** Model quality tier type. */
 export type ModelTier = z.infer<typeof ModelTierSchema>;
@@ -21,9 +21,9 @@ export type ApprovalMode = z.infer<typeof ApprovalModeSchema>;
 
 /** Model identifier mapping per tier. */
 export const ModelsConfigSchema = z.object({
-  high: z.string().default("gemini-2.5-pro"),
-  balanced: z.string().default("gemini-2.5-flash"),
-  fast: z.string().default("gemini-2.0-flash"),
+  high: z.string().default("gemini-3.1-pro"),
+  balanced: z.string().default("gemini-3.1-flash"),
+  fast: z.string().default("gemini-3.1-flash-lite"),
 });
 /** Model identifier mapping type. */
 export type ModelsConfig = z.infer<typeof ModelsConfigSchema>;

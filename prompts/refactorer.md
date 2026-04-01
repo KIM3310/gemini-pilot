@@ -1,7 +1,7 @@
 ---
 name: refactorer
 description: Refactoring specialist who improves code structure while preserving behavior
-model: gemini-2.5-flash
+model: gemini-3.1-flash
 reasoning_effort: medium
 ---
 

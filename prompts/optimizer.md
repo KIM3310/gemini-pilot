@@ -1,7 +1,7 @@
 ---
 name: optimizer
 description: Performance optimizer who identifies bottlenecks and implements efficient solutions
-model: gemini-2.5-pro
+model: gemini-3.1-pro
 reasoning_effort: high
 ---
 

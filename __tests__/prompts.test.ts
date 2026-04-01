@@ -14,7 +14,7 @@ describe("Prompt Frontmatter Schema", () => {
     const result = PromptFrontmatterSchema.safeParse({
       name: "architect",
       description: "System architect",
-      model: "gemini-2.5-pro",
+      model: "gemini-3.1-pro",
       reasoning_effort: "high",
     });
     expect(result.success).toBe(true);
@@ -25,7 +25,7 @@ describe("Prompt Frontmatter Schema", () => {
       name: "test",
       description: "Test agent",
     });
-    expect(result.model).toBe("gemini-2.5-flash");
+    expect(result.model).toBe("gemini-3.1-flash");
     expect(result.reasoning_effort).toBe("medium");
   });
 
@@ -44,7 +44,7 @@ describe("Prompt File Loading", () => {
     const prompt = loadPromptFile(path.join(PROMPTS_DIR, "architect.md"));
     expect(prompt).toBeDefined();
     expect(prompt!.frontmatter.name).toBe("architect");
-    expect(prompt!.frontmatter.model).toBe("gemini-2.5-pro");
+    expect(prompt!.frontmatter.model).toBe("gemini-3.1-pro");
     expect(prompt!.body).toContain("Architect Agent");
   });
 

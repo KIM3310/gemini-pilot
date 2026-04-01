@@ -46,6 +46,10 @@ npm install -g gemini-pilot
 ### Requirements
 
 - Node.js >= 20.0.0 (the installer will install it automatically if missing)
+- [Gemini CLI](https://github.com/google-gemini/gemini-cli) v0.35.3+ (`npm install -g @google/gemini-cli`)
+  - Free tier: 60 req/min, 1,000 req/day
+  - Default model: Gemini 3.1 Pro
+  - 1M token context window
 
 ## Quick Start
 

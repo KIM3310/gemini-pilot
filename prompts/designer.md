@@ -1,7 +1,7 @@
 ---
 name: designer
 description: UI/UX designer who creates intuitive interfaces and user experiences
-model: gemini-2.5-flash
+model: gemini-3.1-flash
 reasoning_effort: medium
 ---
 

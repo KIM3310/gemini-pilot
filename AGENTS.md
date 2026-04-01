@@ -28,9 +28,9 @@
 
 ### Model Routing
 
-- **gemini-2.5-pro**: Complex reasoning, architecture decisions, security analysis, multi-step planning
-- **gemini-2.5-flash**: Code generation, reviews, testing, documentation, standard implementation
-- **gemini-2.0-flash**: Quick queries, formatting, simple lookups, status checks
+- **gemini-3.1-pro**: Complex reasoning, architecture decisions, security analysis, multi-step planning
+- **gemini-3.1-flash**: Code generation, reviews, testing, documentation, standard implementation
+- **gemini-3.1-flash-lite**: Quick queries, formatting, simple lookups, status checks
 
 ## Workflow Activation Rules
 

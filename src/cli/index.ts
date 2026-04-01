@@ -31,6 +31,13 @@ import { formatError } from "../errors/index.js";
 import { getPluginDirs, ensurePluginDirs } from "../plugins/index.js";
 import { runBenchmark, printBenchmarkTable } from "../benchmark/index.js";
 import { applyTemplate, TEMPLATE_NAMES } from "../init/index.js";
+import { runToolBenchmark, formatBenchmarkTable as formatToolBenchmarkTable } from "../tool-reliability/index.js";
+import {
+  runToolBench,
+  runToolBenchComparison,
+  isToolCallingPromptAvailable,
+  printToolBenchTable,
+} from "../tool-bench/index.js";
 import type { ModelTier, ApprovalMode } from "../config/schema.js";
 
 const program = new Command();
@@ -563,6 +570,32 @@ program
       }, 2000);
     } else {
       renderOnce();
+    }
+  });
+
+// --- gp tool-bench ---
+program
+  .command("tool-bench")
+  .description("Run tool-calling benchmarks (reliability + prompt optimization)")
+  .option("--prompt-only", "Only run the tool-calling prompt benchmark (20 cases)")
+  .option("--reliability-only", "Only run the tool reliability benchmark")
+  .action((opts) => {
+    if (!opts.promptOnly) {
+      console.log("\n  Running tool reliability benchmark...\n");
+      const result = runToolBenchmark();
+      console.log(formatToolBenchmarkTable(result));
+    }
+
+    if (!opts.reliabilityOnly) {
+      console.log("\n  Tool-Calling Prompt Benchmark (20 cases)\n");
+
+      const promptAvailable = isToolCallingPromptAvailable();
+      console.log(`  Tool-calling prompt: ${promptAvailable ? "loaded" : "NOT FOUND"}`);
+
+      const comparison = runToolBenchComparison();
+      printToolBenchTable(comparison.withoutPrompt, "Without Tool-Calling Prompt");
+      printToolBenchTable(comparison.withPrompt, "With Tool-Calling Prompt");
+      console.log(`  Improvement: ${comparison.improvementPct >= 0 ? "+" : ""}${comparison.improvementPct.toFixed(1)}%\n`);
     }
   });
 

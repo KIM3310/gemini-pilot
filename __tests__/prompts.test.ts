@@ -64,7 +64,7 @@ describe("Prompt File Loading", () => {
 describe("Prompts Directory Loading", () => {
   it("should load all 15 prompts from the prompts directory", () => {
     const prompts = loadPromptsFromDir(PROMPTS_DIR);
-    expect(prompts.size).toBe(15);
+    expect(prompts.size).toBe(16);
   });
 
   it("should have all expected agent names", () => {
@@ -98,11 +98,11 @@ describe("PromptRegistry", () => {
     const registry = new PromptRegistry();
     registry.addDirectory(PROMPTS_DIR);
 
-    expect(registry.size).toBe(15);
+    expect(registry.size).toBe(16);
     expect(registry.has("architect")).toBe(true);
     expect(registry.has("nonexistent")).toBe(false);
-    expect(registry.names().length).toBe(15);
-    expect(registry.list().length).toBe(15);
+    expect(registry.names().length).toBe(16);
+    expect(registry.list().length).toBe(16);
   });
 
   it("should retrieve a specific prompt", () => {

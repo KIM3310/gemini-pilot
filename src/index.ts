@@ -21,3 +21,5 @@ export * from "./plugins/index.js";
 export * from "./benchmark/index.js";
 export * from "./init/index.js";
 export * from "./hud/index.js";
+export * from "./tool-reliability/index.js";
+export * from "./tool-bench/index.js";

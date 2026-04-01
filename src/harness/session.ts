@@ -17,6 +17,7 @@ import { createLogger } from "../utils/logger.js";
 import { readTextFile, findProjectRoot } from "../utils/fs.js";
 import { hooks } from "../hooks/index.js";
 import { formatError } from "../errors/index.js";
+import { createPromptRegistry } from "../prompts/index.js";
 
 const log = createLogger("harness");
 
@@ -76,6 +77,7 @@ export function buildSystemPrompt(options: {
   agentsContract?: string;
   projectMemory?: string;
   workflowContext?: string;
+  toolsEnabled?: boolean;
 }): string {
   const parts: string[] = [];
 
@@ -95,7 +97,31 @@ export function buildSystemPrompt(options: {
     parts.push("# Active Workflow\n\n" + options.workflowContext);
   }
 
+  // Inject tool-calling optimization prompt when tools are in use
+  if (options.toolsEnabled) {
+    const toolCallingPrompt = loadToolCallingPrompt();
+    if (toolCallingPrompt) {
+      parts.push(toolCallingPrompt);
+    }
+  }
+
   return parts.join("\n\n---\n\n");
+}
+
+/**
+ * Load the tool-calling optimization prompt from the prompt registry.
+ *
+ * @returns The tool-calling prompt body text, or undefined if not found
+ */
+export function loadToolCallingPrompt(): string | undefined {
+  try {
+    const registry = createPromptRegistry();
+    const prompt = registry.get("tool-calling");
+    return prompt?.body;
+  } catch {
+    log.debug("Failed to load tool-calling prompt");
+    return undefined;
+  }
 }
 
 /**

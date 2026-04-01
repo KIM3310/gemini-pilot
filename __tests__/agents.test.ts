@@ -84,9 +84,9 @@ describe("AgentRegistry", () => {
     const prompts = loadPromptsFromDir(PROMPTS_DIR);
     const registry = buildAgentRegistry(prompts, DEFAULT_CONFIG.models);
 
-    expect(registry.size).toBe(15);
+    expect(registry.size).toBe(16);
     expect(registry.has("architect")).toBe(true);
     expect(registry.has("executor")).toBe(true);
-    expect(registry.names().length).toBe(15);
+    expect(registry.names().length).toBe(16);
   });
 });

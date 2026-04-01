@@ -87,6 +87,28 @@ export function findProjectRoot(startDir?: string): string {
 }
 
 /**
+ * Read the version from the package.json nearest to this module.
+ */
+export function getPackageVersion(): string {
+  try {
+    // Walk up from this file to find the package root
+    let dir = path.dirname(new URL(import.meta.url).pathname);
+    const root = path.parse(dir).root;
+    while (dir !== root) {
+      const pkgPath = path.join(dir, "package.json");
+      if (fs.existsSync(pkgPath)) {
+        const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
+        return pkg.version ?? "0.0.0";
+      }
+      dir = path.dirname(dir);
+    }
+  } catch {
+    // Fallback
+  }
+  return "0.0.0";
+}
+
+/**
  * Get the .gemini-pilot state directory for a project.
  */
 export function getStateDir(projectRoot?: string): string {

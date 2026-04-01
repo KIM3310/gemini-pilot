@@ -7,6 +7,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { StateManager } from "../state/manager.js";
 import { createLogger } from "../utils/logger.js";
+import { getPackageVersion } from "../utils/fs.js";
 
 const log = createLogger("mcp");
 
@@ -16,7 +17,7 @@ const log = createLogger("mcp");
 export function createMcpServer(projectRoot?: string): McpServer {
   const server = new McpServer({
     name: "gemini-pilot",
-    version: "1.0.0",
+    version: getPackageVersion(),
   });
 
   const state = new StateManager(projectRoot);

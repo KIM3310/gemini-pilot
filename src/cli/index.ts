@@ -18,7 +18,7 @@ import {
 import { launchTeam, isTmuxAvailable } from "../team/index.js";
 import { StateManager } from "../state/index.js";
 import { startMcpServer } from "../mcp/index.js";
-import { findProjectRoot, ensureDir, getStateDir, writeJsonFile } from "../utils/fs.js";
+import { findProjectRoot, ensureDir, getStateDir, writeJsonFile, getPackageVersion } from "../utils/fs.js";
 import { setLogLevel } from "../utils/logger.js";
 import type { ModelTier, ApprovalMode } from "../config/schema.js";
 
@@ -27,7 +27,7 @@ const program = new Command();
 program
   .name("gp")
   .description("Multi-agent orchestration harness for Gemini CLI")
-  .version("1.0.0")
+  .version(getPackageVersion())
   .option("--verbose", "Enable verbose logging")
   .hook("preAction", (thisCommand) => {
     if (thisCommand.opts().verbose) {

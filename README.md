@@ -1,3 +1,10 @@
+![CI](https://github.com/KIM3310/gemini-pilot/actions/workflows/ci.yml/badge.svg)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)
+
+[English](README.md) | [한국어](README.ko.md)
+
 # Gemini Pilot
 
 Multi-agent orchestration harness for [Gemini CLI](https://github.com/google-gemini/gemini-cli) -- prompts, workflows, and team coordination.
@@ -112,6 +119,23 @@ npm run lint
 
 # Build
 npm run build
+```
+
+## Architecture
+
+```mermaid
+graph TD
+  CLI[gp CLI] --> Harness[Session Harness]
+  CLI --> Team[Team Coordinator]
+  CLI --> WF[Workflow Engine]
+  Harness --> Gemini[Gemini CLI]
+  Team --> tmux[tmux Panes]
+  tmux --> Gemini
+  WF --> Agents[Agent System]
+  Agents --> Gemini
+  MCP[MCP Server] --> State[State Store]
+  MCP --> Memory[Project Memory]
+  Hooks[Hook System] --> Harness
 ```
 
 ## License

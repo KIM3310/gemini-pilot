@@ -12,6 +12,7 @@ import type { AgentDefinition } from "../agents/registry.js";
 import { StateManager, type SessionState } from "../state/index.js";
 import { createLogger } from "../utils/logger.js";
 import { readTextFile, findProjectRoot } from "../utils/fs.js";
+import { hooks } from "../hooks/index.js";
 
 const log = createLogger("harness");
 
@@ -160,6 +161,13 @@ export function launchSession(
   log.info(`Launching Gemini CLI: gemini ${args.join(" ")}`);
   log.info(`Model: ${model} | Agent: ${options.agent?.name ?? "none"}`);
 
+  hooks.emit("session-start", {
+    sessionId: session.id,
+    tier: options.tier,
+    agent: options.agent?.name,
+    approvalMode: options.approvalMode,
+  });
+
   try {
     const execOpts: ExecSyncOptions = {
       stdio: "inherit",
@@ -173,10 +181,21 @@ export function launchSession(
     session.status = "completed";
     session.endedAt = new Date().toISOString();
     stateManager.saveSession(session);
+
+    hooks.emit("session-end", {
+      sessionId: session.id,
+      status: "completed",
+    });
   } catch (err) {
     session.status = "error";
     session.endedAt = new Date().toISOString();
     stateManager.saveSession(session);
+
+    hooks.emit("error", {
+      sessionId: session.id,
+      error: err instanceof Error ? err.message : String(err),
+    });
+
     log.error("Session ended with error", err);
   }
 }

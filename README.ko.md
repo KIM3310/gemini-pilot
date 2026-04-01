@@ -1,3 +1,10 @@
+![CI](https://github.com/KIM3310/gemini-pilot/actions/workflows/ci.yml/badge.svg)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)
+
+[English](README.md) | [한국어](README.ko.md)
+
 # Gemini Pilot
 
 [Gemini CLI](https://github.com/google-gemini/gemini-cli)를 위한 멀티 에이전트 오케스트레이션 하네스 -- 프롬프트, 워크플로우, 팀 협업 관리.

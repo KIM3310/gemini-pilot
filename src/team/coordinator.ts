@@ -246,9 +246,23 @@ export function launchTeam(
     process.exit(1);
   }
 
-  // Create additional panes for workers
+  // Create additional panes for workers and collect pane IDs
+  const paneIds: string[] = [];
+
+  // The first pane is the default pane of the session; get its ID
+  try {
+    const firstPane = execSync(
+      `tmux list-panes -t "${sessionName}" -F "#{pane_id}"`,
+      { encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] },
+    ).trim().split("\n")[0];
+    if (firstPane) paneIds.push(firstPane);
+  } catch {
+    // non-fatal
+  }
+
   for (let i = 1; i < options.workerCount; i++) {
-    createTmuxPane(sessionName);
+    const paneId = createTmuxPane(sessionName);
+    if (paneId) paneIds.push(paneId);
   }
 
   // Tile the panes evenly
@@ -256,6 +270,12 @@ export function launchTeam(
     execSync(`tmux select-layout -t "${sessionName}" tiled`, { stdio: "pipe" });
   } catch {
     // Layout may fail with few panes, non-fatal
+  }
+
+  // Send the harness command to each pane
+  const role = options.role ?? "executor";
+  for (const paneId of paneIds) {
+    sendToTmuxPane(paneId, `gp harness --agent ${role}`);
   }
 
   console.log(`\nTeam session ready. Attach with:\n  tmux attach -t ${sessionName}\n`);

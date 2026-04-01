@@ -108,6 +108,21 @@ else
   success "Node.js installed: $(node --version)"
 fi
 
+# Permanently add Homebrew bin to PATH in shell rc files
+ensure_brew_in_path
+if command -v brew &>/dev/null; then
+  BREW_PREFIX="$(brew --prefix)"
+  for rc in ~/.zshrc ~/.bash_profile ~/.bashrc; do
+    if [ -f "$rc" ] || [ "$rc" = "$HOME/.zshrc" ]; then
+      if ! grep -q "$BREW_PREFIX/bin" "$rc" 2>/dev/null; then
+        echo "export PATH=\"$BREW_PREFIX/bin:\$PATH\"" >> "$rc"
+        info "Added $BREW_PREFIX/bin to $rc"
+      fi
+    fi
+  done
+  export PATH="$BREW_PREFIX/bin:$PATH"
+fi
+
 # ── Step 3: Gemini CLI ───────────────────────────────────
 step "3/${TOTAL_STEPS}  Checking Gemini CLI..."
 if command -v gemini &>/dev/null; then
@@ -127,6 +142,18 @@ else
     fi
   fi
 fi
+
+# Permanently add npm global bin to PATH in shell rc files
+NPM_BIN="$(npm config get prefix)/bin"
+for rc in ~/.zshrc ~/.bash_profile ~/.bashrc; do
+  if [ -f "$rc" ] || [ "$rc" = "$HOME/.zshrc" ]; then
+    if ! grep -q "$NPM_BIN" "$rc" 2>/dev/null; then
+      echo "export PATH=\"$NPM_BIN:\$PATH\"" >> "$rc"
+      info "Added $NPM_BIN to $rc"
+    fi
+  fi
+done
+export PATH="$NPM_BIN:$PATH"
 
 # ── Step 4: Dependencies ────────────────────────────────
 step "4/${TOTAL_STEPS}  Installing dependencies..."
@@ -157,6 +184,18 @@ else
   warn "Or run:  node $(pwd)/dist/cli/index.js  directly."
   ERRORS=$((ERRORS + 1))
 fi
+
+# Ensure npm link bin directory is permanently in PATH
+NPM_LINK_BIN="$(npm config get prefix)/bin"
+for rc in ~/.zshrc ~/.bash_profile ~/.bashrc; do
+  if [ -f "$rc" ] || [ "$rc" = "$HOME/.zshrc" ]; then
+    if ! grep -q "$NPM_LINK_BIN" "$rc" 2>/dev/null; then
+      echo "export PATH=\"$NPM_LINK_BIN:\$PATH\"" >> "$rc"
+      info "Added $NPM_LINK_BIN to $rc"
+    fi
+  fi
+done
+export PATH="$NPM_LINK_BIN:$PATH"
 
 # ── Step 7: Setup + Doctor ───────────────────────────────
 step "7/${TOTAL_STEPS}  Running initial setup..."

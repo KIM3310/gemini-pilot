@@ -188,6 +188,18 @@ else
   fi
 fi
 
+# Permanently add npm global bin to PATH in shell rc files
+NPM_BIN="$(npm config get prefix)/bin"
+for rc in ~/.bashrc ~/.profile ~/.zshrc; do
+  if [ -f "$rc" ]; then
+    if ! grep -q "$NPM_BIN" "$rc" 2>/dev/null; then
+      echo "export PATH=\"$NPM_BIN:\$PATH\"" >> "$rc"
+      info "Added $NPM_BIN to $rc"
+    fi
+  fi
+done
+export PATH="$NPM_BIN:$PATH"
+
 # ── Step 5: Dependencies ────────────────────────────────
 step "5/${TOTAL_STEPS}  Installing dependencies..."
 if npm install --no-fund --no-audit; then
@@ -217,6 +229,18 @@ else
   warn "Or run:  node $(pwd)/dist/cli/index.js  directly."
   ERRORS=$((ERRORS + 1))
 fi
+
+# Ensure npm link bin directory is permanently in PATH
+NPM_LINK_BIN="$(npm config get prefix)/bin"
+for rc in ~/.bashrc ~/.profile ~/.zshrc; do
+  if [ -f "$rc" ]; then
+    if ! grep -q "$NPM_LINK_BIN" "$rc" 2>/dev/null; then
+      echo "export PATH=\"$NPM_LINK_BIN:\$PATH\"" >> "$rc"
+      info "Added $NPM_LINK_BIN to $rc"
+    fi
+  fi
+done
+export PATH="$NPM_LINK_BIN:$PATH"
 
 # ── Step 8: Setup + Doctor ───────────────────────────────
 step "8/${TOTAL_STEPS}  Running initial setup..."

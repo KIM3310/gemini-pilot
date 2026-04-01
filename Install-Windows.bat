@@ -82,6 +82,16 @@ if !ERRORLEVEL! neq 0 (
     exit /b 1
 )
 
+:: Add Node.js to system PATH permanently
+for /f "tokens=*" %%a in ('where node 2^>nul') do set "NODE_DIR=%%~dpa"
+if defined NODE_DIR (
+    echo !PATH! | findstr /I /C:"!NODE_DIR!" >nul 2>nul
+    if !ERRORLEVEL! neq 0 (
+        setx PATH "!PATH!;!NODE_DIR!" /M 2>nul || setx PATH "!PATH!;!NODE_DIR!"
+        echo   Added Node.js dir to permanent PATH: !NODE_DIR!
+    )
+)
+
 :: ── Step 3: Gemini CLI ──────────────────────────────────
 echo.
 echo   [3/!TOTAL_STEPS!] Checking Gemini CLI...
@@ -98,6 +108,17 @@ if !ERRORLEVEL! neq 0 (
     )
 ) else (
     echo   OK Gemini CLI found
+)
+
+:: Add npm global prefix to system PATH permanently
+for /f "tokens=*" %%a in ('npm config get prefix 2^>nul') do set "NPM_PREFIX=%%a"
+if defined NPM_PREFIX (
+    echo !PATH! | findstr /I /C:"!NPM_PREFIX!" >nul 2>nul
+    if !ERRORLEVEL! neq 0 (
+        setx PATH "!PATH!;!NPM_PREFIX!" /M 2>nul || setx PATH "!PATH!;!NPM_PREFIX!"
+        set "PATH=!PATH!;!NPM_PREFIX!"
+        echo   Added npm global prefix to permanent PATH: !NPM_PREFIX!
+    )
 )
 
 :: ── Step 4: Dependencies ────────────────────────────────

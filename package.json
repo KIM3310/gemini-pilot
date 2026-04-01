@@ -52,5 +52,9 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/KIM3310/gemini-pilot"
+  },
+  "homepage": "https://github.com/KIM3310/gemini-pilot#readme",
+  "bugs": {
+    "url": "https://github.com/KIM3310/gemini-pilot/issues"
   }
 }

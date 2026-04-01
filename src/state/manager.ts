@@ -2,6 +2,7 @@
  * State manager: persists session, workflow, team, memory, and notepad state.
  */
 
+import * as fs from "node:fs";
 import * as path from "node:path";
 import { getStateDir, readJsonFile, writeJsonFile, ensureDir } from "../utils/fs.js";
 import { createLogger } from "../utils/logger.js";
@@ -43,17 +44,24 @@ export class StateManager {
 
   listSessions(): SessionState[] {
     const sessionsDir = path.join(this.stateDir, "sessions");
-    const files = (() => {
-      try {
-        const fs = require("node:fs") as typeof import("node:fs");
-        return fs.readdirSync(sessionsDir).filter((f: string) => f.endsWith(".json"));
-      } catch {
-        return [];
-      }
-    })();
+    let files: string[];
+    try {
+      files = fs.readdirSync(sessionsDir).filter((f) => f.endsWith(".json"));
+    } catch {
+      return [];
+    }
     return files
-      .map((f: string) => readJsonFile<SessionState>(path.join(sessionsDir, f)))
+      .map((f) => readJsonFile<SessionState>(path.join(sessionsDir, f)))
       .filter((s): s is SessionState => s !== undefined);
+  }
+
+  deleteSession(sessionId: string): void {
+    try {
+      fs.unlinkSync(this.getSessionPath(sessionId));
+      log.debug(`Session deleted: ${sessionId}`);
+    } catch {
+      // Already gone
+    }
   }
 
   // --- Workflow State ---
@@ -73,7 +81,6 @@ export class StateManager {
 
   clearWorkflowState(): void {
     try {
-      const fs = require("node:fs") as typeof import("node:fs");
       fs.unlinkSync(this.getWorkflowStatePath());
     } catch {
       // Already gone

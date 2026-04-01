@@ -47,7 +47,7 @@ export interface WorkflowDefinition {
  */
 function parseWorkflowSteps(body: string): WorkflowStep[] {
   const steps: WorkflowStep[] = [];
-  const stepRegex = /### \d+\.\s+\w+\n([\s\S]*?)(?=### \d+\.|$)/g;
+  const stepRegex = /### \d+\.\s+.+\n([\s\S]*?)(?=### \d+\.|$)/g;
   let match: RegExpExecArray | null;
 
   while ((match = stepRegex.exec(body)) !== null) {

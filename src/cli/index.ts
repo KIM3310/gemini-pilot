@@ -303,7 +303,7 @@ program
       // Not found
     }
     console.log(
-      `  ${geminiOk ? "OK" : "WARN"}  Gemini CLI ${geminiOk ? "found" : "not found (install: npm i -g @anthropic-ai/gemini-cli)"}`,
+      `  ${geminiOk ? "OK" : "WARN"}  Gemini CLI ${geminiOk ? "found" : "not found (install: npm i -g @google/gemini-cli)"}`,
     );
 
     // Check tmux

@@ -19,44 +19,33 @@ Multi-agent orchestration harness for [Gemini CLI](https://github.com/google-gem
 - **MCP Server** -- Model Context Protocol integration for tool-based workflows.
 - **State Persistence** -- JSON-based state, memory, and notepad stored in `.gemini-pilot/`.
 
-## One-Click Install
+## Installation
 
-**macOS / Linux:**
+### macOS
+1. Download or clone this repo
+2. Double-click `Install-Mac.command`
+3. Done! Open Terminal and type `gp --help`
+
+### Windows
+1. Download or clone this repo
+2. Double-click `Install-Windows.bat`
+3. Done! Open CMD and type `gp --help`
+
+### Linux
 ```bash
 git clone https://github.com/KIM3310/gemini-pilot.git
 cd gemini-pilot
-./install.sh
+chmod +x Install-Linux.sh && ./Install-Linux.sh
 ```
 
-**Windows (CMD):**
-```cmd
-git clone https://github.com/KIM3310/gemini-pilot.git
-cd gemini-pilot
-install.bat
-```
-
-**Windows (PowerShell):**
-```powershell
-git clone https://github.com/KIM3310/gemini-pilot.git
-cd gemini-pilot
-.\install.ps1
-```
-
-## Requirements
-
-- Node.js >= 20.0.0
-
-## Installation
-
+### npm (alternative)
 ```bash
 npm install -g gemini-pilot
 ```
 
-Or install locally in a project:
+### Requirements
 
-```bash
-npm install gemini-pilot
-```
+- Node.js >= 20.0.0 (the installer will install it automatically if missing)
 
 ## Quick Start
 

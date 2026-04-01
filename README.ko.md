@@ -19,44 +19,33 @@
 - **MCP 서버** -- Model Context Protocol 통합으로 도구 기반 워크플로우 지원.
 - **상태 영속화** -- `.gemini-pilot/` 디렉토리에 JSON 기반 상태, 메모리, 노트패드 저장.
 
-## 원클릭 설치
+## 설치
 
-**macOS / Linux:**
+### macOS
+1. 이 저장소를 다운로드하거나 클론합니다
+2. `Install-Mac.command`를 더블클릭합니다
+3. 완료! 터미널을 열고 `gp --help`를 입력하세요
+
+### Windows
+1. 이 저장소를 다운로드하거나 클론합니다
+2. `Install-Windows.bat`를 더블클릭합니다
+3. 완료! CMD를 열고 `gp --help`를 입력하세요
+
+### Linux
 ```bash
 git clone https://github.com/KIM3310/gemini-pilot.git
 cd gemini-pilot
-./install.sh
+chmod +x Install-Linux.sh && ./Install-Linux.sh
 ```
 
-**Windows (CMD):**
-```cmd
-git clone https://github.com/KIM3310/gemini-pilot.git
-cd gemini-pilot
-install.bat
-```
-
-**Windows (PowerShell):**
-```powershell
-git clone https://github.com/KIM3310/gemini-pilot.git
-cd gemini-pilot
-.\install.ps1
-```
-
-## 요구 사항
-
-- Node.js >= 20.0.0
-
-## 설치
-
+### npm (대안)
 ```bash
 npm install -g gemini-pilot
 ```
 
-또는 프로젝트에 로컬 설치:
+### 요구 사항
 
-```bash
-npm install gemini-pilot
-```
+- Node.js >= 20.0.0 (설치 프로그램이 없으면 자동으로 설치합니다)
 
 ## 빠른 시작
 

@@ -5,7 +5,8 @@
  * @module harness/session
  */
 
-import { execSync, execFileSync, type ExecSyncOptions } from "node:child_process";
+import { execSync, execFileSync, spawnSync, type ExecSyncOptions } from "node:child_process";
+import { spawn } from "node:child_process";
 import * as path from "node:path";
 import * as fs from "node:fs";
 import { randomUUID } from "node:crypto";
@@ -18,6 +19,35 @@ import { hooks } from "../hooks/index.js";
 import { formatError } from "../errors/index.js";
 
 const log = createLogger("harness");
+
+/**
+ * Check whether the `gemini` CLI binary is available on $PATH.
+ *
+ * @returns true when the binary is found
+ */
+export function isGeminiInstalled(): boolean {
+  try {
+    const checkCmd = process.platform === "win32" ? "where gemini" : "which gemini";
+    execSync(checkCmd, { stdio: "pipe" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Abort with a clear error message when the Gemini CLI is not installed.
+ *
+ * Call this at the top of every execution path that needs the binary.
+ */
+export function ensureGeminiInstalled(): void {
+  if (!isGeminiInstalled()) {
+    console.error(
+      "Error: Gemini CLI not found. Install it with: npm install -g @google/gemini-cli",
+    );
+    process.exit(1);
+  }
+}
 
 /** Options for launching a Gemini CLI session. */
 export interface SessionOptions {
@@ -246,6 +276,9 @@ export function launchSession(
     return;
   }
 
+  // Ensure gemini CLI is available before attempting to launch
+  ensureGeminiInstalled();
+
   const session = createSession(config, options);
 
   log.info(`Launching Gemini CLI: ${fullCommand}`);
@@ -260,30 +293,49 @@ export function launchSession(
 
   const startTime = Date.now();
 
-  try {
-    const execOpts: ExecSyncOptions = {
-      stdio: "inherit",
-      cwd: projectRoot,
-      env: { ...process.env },
-    };
+  // Use spawn with stdio: 'inherit' for a fully interactive session
+  // (supports stdin/stdout/stderr passthrough to the terminal)
+  const child = spawn("gemini", args, {
+    stdio: "inherit",
+    cwd: projectRoot,
+    env: { ...process.env },
+  });
 
-    execSync(fullCommand, execOpts);
-
-    // Update metrics
+  child.on("close", (code) => {
     const elapsed = Date.now() - startTime;
-    session.status = "completed";
-    session.endedAt = new Date().toISOString();
-    session.metrics = {
-      ...session.metrics!,
-      elapsedMs: elapsed,
-    };
-    stateManager.saveSession(session);
 
-    hooks.emit("session-end", {
-      sessionId: session.id,
-      status: "completed",
-    });
-  } catch (err) {
+    if (code === 0 || code === null) {
+      session.status = "completed";
+      session.endedAt = new Date().toISOString();
+      session.metrics = {
+        ...session.metrics!,
+        elapsedMs: elapsed,
+      };
+      stateManager.saveSession(session);
+
+      hooks.emit("session-end", {
+        sessionId: session.id,
+        status: "completed",
+      });
+    } else {
+      session.status = "error";
+      session.endedAt = new Date().toISOString();
+      session.metrics = {
+        ...session.metrics!,
+        elapsedMs: elapsed,
+      };
+      stateManager.saveSession(session);
+
+      hooks.emit("error", {
+        sessionId: session.id,
+        error: `Process exited with code ${code}`,
+      });
+
+      log.error(`Session ended with exit code ${code}`);
+    }
+  });
+
+  child.on("error", (err) => {
     const elapsed = Date.now() - startTime;
     session.status = "error";
     session.endedAt = new Date().toISOString();
@@ -295,11 +347,11 @@ export function launchSession(
 
     hooks.emit("error", {
       sessionId: session.id,
-      error: err instanceof Error ? err.message : String(err),
+      error: err.message,
     });
 
     log.error("Session ended with error", err);
-  }
+  });
 }
 
 /**
@@ -340,10 +392,14 @@ export function executePrompt(
     return "[DRY RUN] No output";
   }
 
+  // Ensure gemini CLI is available
+  ensureGeminiInstalled();
+
   try {
     const result = execFileSync("gemini", args, {
       encoding: "utf-8",
       timeout: 60000,
+      stdio: ["pipe", "pipe", "inherit"],
     });
     return result.trim();
   } catch (err) {

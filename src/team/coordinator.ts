@@ -13,6 +13,7 @@ import type { GeminiPilotConfig } from "../config/schema.js";
 import type { AgentDefinition } from "../agents/registry.js";
 import { StateManager, type TeamState } from "../state/index.js";
 import { createLogger } from "../utils/logger.js";
+import { ensureGeminiInstalled } from "../harness/session.js";
 
 const log = createLogger("team");
 
@@ -224,6 +225,9 @@ export function launchTeam(
   config: GeminiPilotConfig,
   options: TeamOptions,
 ): void {
+  // Ensure gemini CLI is available before launching team
+  ensureGeminiInstalled();
+
   if (!isTmuxAvailable()) {
     log.error("tmux is not installed. Team mode requires tmux.");
     console.error(

@@ -11,7 +11,7 @@
 
 import type { GeminiPilotConfig } from "../config/schema.js";
 import type { WorkflowDefinition, WorkflowStep } from "./engine.js";
-import { executePrompt, resolveModel, printDryRun, buildGeminiArgs } from "../harness/session.js";
+import { executePrompt, resolveModel, printDryRun, buildGeminiArgs, ensureGeminiInstalled } from "../harness/session.js";
 import { StateManager, type WorkflowState } from "../state/index.js";
 import { createLogger } from "../utils/logger.js";
 import { formatError } from "../errors/index.js";
@@ -137,6 +137,11 @@ export function runWorkflow(
     updatedAt: new Date().toISOString(),
   };
   stateManager.saveWorkflowState(workflowState);
+
+  // Ensure gemini CLI is available when running for real
+  if (!dryRun) {
+    ensureGeminiInstalled();
+  }
 
   console.log(`\nWorkflow: ${workflow.frontmatter.name}`);
   console.log(`Description: ${workflow.frontmatter.description}`);

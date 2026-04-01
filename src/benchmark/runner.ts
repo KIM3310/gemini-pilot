@@ -7,7 +7,7 @@
 
 import { execFileSync } from "node:child_process";
 import type { GeminiPilotConfig, ModelTier } from "../config/schema.js";
-import { resolveModel, buildGeminiArgs, printDryRun } from "../harness/session.js";
+import { resolveModel, buildGeminiArgs, printDryRun, ensureGeminiInstalled } from "../harness/session.js";
 import { createLogger } from "../utils/logger.js";
 
 const log = createLogger("benchmark");
@@ -79,6 +79,9 @@ export function runBenchmark(
     return result;
   }
 
+  // Ensure gemini CLI is available before running benchmarks
+  ensureGeminiInstalled();
+
   for (const tier of BENCHMARK_TIERS) {
     const model = resolveModel(config, tier);
     const args = buildGeminiArgs({ model, approvalMode: "auto" });
@@ -95,6 +98,7 @@ export function runBenchmark(
       response = execFileSync("gemini", args, {
         encoding: "utf-8",
         timeout: 120000,
+        stdio: ["pipe", "pipe", "inherit"],
       }).trim();
     } catch (err) {
       success = false;

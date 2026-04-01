@@ -4,6 +4,8 @@
  * Gemini Pilot CLI -- Multi-agent orchestration harness for Gemini CLI.
  */
 
+import * as fs from "node:fs";
+import { execSync } from "node:child_process";
 import { Command } from "commander";
 import { loadConfig, validateConfig } from "../config/index.js";
 import { createPromptRegistry } from "../prompts/index.js";
@@ -12,8 +14,6 @@ import { createWorkflowRegistry } from "../workflows/index.js";
 import {
   launchSession,
   executePrompt,
-  buildSystemPrompt,
-  resolveModel,
 } from "../harness/index.js";
 import { launchTeam, isTmuxAvailable } from "../team/index.js";
 import { StateManager } from "../state/index.js";
@@ -48,7 +48,6 @@ program
     // Write default project config if none exists
     const configPath = `${stateDir}/config.json`;
     try {
-      const fs = require("node:fs") as typeof import("node:fs");
       if (!fs.existsSync(configPath)) {
         writeJsonFile(configPath, {
           models: {
@@ -222,6 +221,36 @@ workflowsCmd
   });
 
 workflowsCmd
+  .command("show <name>")
+  .description("Show details of a specific workflow")
+  .action((name: string) => {
+    const registry = createWorkflowRegistry();
+    const workflow = registry.get(name);
+
+    if (!workflow) {
+      console.error(`Workflow not found: ${name}`);
+      console.error(`Available: ${registry.names().join(", ")}`);
+      process.exit(1);
+    }
+
+    console.log(`\n  Name: ${workflow.frontmatter.name}`);
+    console.log(`  Description: ${workflow.frontmatter.description}`);
+    console.log(`  Triggers: ${workflow.frontmatter.triggers.join(", ") || "none"}`);
+    console.log(`  Max Iterations: ${workflow.frontmatter.execution_policy.max_iterations}`);
+    console.log(`  Halt on Failure: ${workflow.frontmatter.execution_policy.halt_on_failure}`);
+    console.log(`  File: ${workflow.filePath}`);
+    console.log(`\n  Steps (${workflow.steps.length}):\n`);
+    workflow.steps.forEach((step, i) => {
+      console.log(`    ${i + 1}. [${step.agent}] ${step.action}`);
+      console.log(`       Gate: ${step.gate}`);
+      if (step.loop_to !== undefined) {
+        console.log(`       Loop to step ${step.loop_to} if needed`);
+      }
+    });
+    console.log(`\n${workflow.body}`);
+  });
+
+workflowsCmd
   .command("run <name>")
   .description("Run a workflow")
   .action((name: string) => {
@@ -268,7 +297,6 @@ program
     // Check Gemini CLI
     let geminiOk = false;
     try {
-      const { execSync } = require("node:child_process") as typeof import("node:child_process");
       execSync("which gemini", { stdio: "pipe" });
       geminiOk = true;
     } catch {
@@ -286,7 +314,6 @@ program
 
     // Check project setup
     const stateDir = getStateDir();
-    const fs = require("node:fs") as typeof import("node:fs");
     const setupOk = fs.existsSync(stateDir);
     console.log(
       `  ${setupOk ? "OK" : "INFO"}  Project setup ${setupOk ? stateDir : "not initialized (run: gp setup)"}`,

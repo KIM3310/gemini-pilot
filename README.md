@@ -233,6 +233,35 @@ graph TD
   Hooks[Hook System] --> Harness
 ```
 
+## Tool Reliability Middleware
+
+The `tool-reliability` module improves tool-call success rates by 10-12% through three techniques:
+
+- **Robust JSON Parser (`rjson`)** -- Recovers from trailing commas, single quotes, unquoted keys, comments, missing closing brackets, markdown code fences, and JSON embedded in surrounding text.
+- **Schema Coercion** -- Automatically coerces LLM output to match Zod schemas: string-to-number, string-to-boolean, single-value-to-array wrapping, snake_case/camelCase key normalization, and unknown field stripping.
+- **Bounded Retry** -- On parse failure, retries with the error included as context. Configurable max retries with exponential backoff.
+
+### Usage
+
+```typescript
+import { createToolReliabilityMiddleware } from "gemini-pilot";
+
+const middleware = createToolReliabilityMiddleware({
+  maxRetries: 3,
+  enableCoercion: true,
+  enableRobustParse: true,
+  enableRetry: true,
+});
+
+// Parse tool calls from model output
+const result = middleware.parse(modelOutput, toolDefinitions);
+console.log(result.calls); // ToolCall[]
+```
+
+### Benchmark
+
+Run `gp tool-bench` to see a BFCL-style comparison of baseline (strict JSON.parse) vs. the middleware across 24 test cases covering simple calls, nested params, multi-tool, type coercion, malformed JSON, XML, and markdown formats.
+
 ## License
 
 [MIT](LICENSE) -- Copyright (c) 2025 Doeon Kim

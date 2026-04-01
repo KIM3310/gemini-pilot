@@ -100,3 +100,61 @@ At session start, the harness injects:
 - Task completion rate
 - Error frequency and recovery time
 - Agent utilization across roles
+
+## Tool Calling Standards
+
+All agents follow a universal tool calling protocol to maximize first-try success rates. These standards are embedded in every agent prompt and enforced at the orchestration level.
+
+### Universal Protocol
+
+1. **Valid JSON only** -- No trailing commas, no single quotes, no comments in tool arguments.
+2. **Exact type matching** -- If a schema says `number`, pass a number (`42`), not a string (`"42"`). If it says `string`, pass a string.
+3. **All required parameters** -- Never omit a required field. Check the schema before calling.
+4. **Exact parameter names** -- Use the precise name from the tool schema. No renaming, no case conversion.
+5. **One action per call** -- Do not batch unrelated operations into a single tool invocation.
+6. **Pre-call validation** -- Mentally verify arguments match the schema before executing.
+
+### Structured Output Rules
+
+- JSON output must be wrapped in ```json code fences
+- JSON must be complete and parseable (no truncation, no placeholder values)
+- All required fields must be present, even if the value is `null`
+- Arrays must be JSON arrays (`[...]`), not comma-separated strings
+
+### Error Recovery Protocol
+
+When a tool call fails:
+1. Read the error message to identify the failing parameter
+2. Fix only the problematic parameter
+3. Retry with the corrected call
+4. Do not change parameters that were already correct
+5. Do not add extra parameters not in the schema
+
+### Reasoning Before Calling
+
+Before each tool invocation, agents follow this pattern:
+1. State the objective
+2. Select the tool
+3. Enumerate required parameters with their expected types
+4. Construct valid JSON arguments
+5. Execute
+
+### Multi-Step Call Chains
+
+- Independent calls may run in parallel
+- Dependent calls must wait for prior results -- never guess at values
+- Track which output feeds into the next input explicitly
+
+### Optional Parameter Handling
+
+- Omit optional parameters unless a specific override is needed
+- Never pass `undefined` or empty strings for optional parameters
+- Rely on documented defaults when no override is required
+
+### BFCL-Aligned Patterns
+
+These standards align with Berkeley Function Calling Leaderboard best practices:
+- Explicit parameter type annotations in all tool guidance
+- Multi-step function calling chains with tracked dependencies
+- Clear parallel vs. sequential tool call decision guidance
+- Consistent handling of optional parameters (omit when not needed)

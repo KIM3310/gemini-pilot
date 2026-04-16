@@ -10,7 +10,7 @@ import { spawn } from "node:child_process";
 import * as path from "node:path";
 import * as fs from "node:fs";
 import { randomUUID } from "node:crypto";
-import type { GeminiPilotConfig, ModelTier, ApprovalMode } from "../config/schema.js";
+import type { MultiCliPilotConfig, ModelTier, ApprovalMode } from "../config/schema.js";
 import type { AgentDefinition } from "../agents/registry.js";
 import { StateManager, type SessionState, type SessionMetrics } from "../state/index.js";
 import { createLogger } from "../utils/logger.js";
@@ -18,17 +18,22 @@ import { readTextFile, findProjectRoot } from "../utils/fs.js";
 import { hooks } from "../hooks/index.js";
 import { formatError } from "../errors/index.js";
 import { createPromptRegistry } from "../prompts/index.js";
+import { getProvider, type CliProvider } from "../providers/index.js";
+
+/** Legacy alias kept for callers that still use `GeminiPilotConfig`. */
+type GeminiPilotConfig = MultiCliPilotConfig;
 
 const log = createLogger("harness");
 
 /**
- * Check whether the `gemini` CLI binary is available on $PATH.
+ * Check whether a provider CLI binary is available on $PATH.
  *
- * @returns true when the binary is found
+ * @param binary - Binary name to look up (defaults to `gemini`).
+ * @returns true when the binary is found.
  */
-export function isGeminiInstalled(): boolean {
+export function isCliInstalled(binary = "gemini"): boolean {
   try {
-    const checkCmd = process.platform === "win32" ? "where gemini" : "which gemini";
+    const checkCmd = process.platform === "win32" ? `where ${binary}` : `which ${binary}`;
     execSync(checkCmd, { stdio: "pipe" });
     return true;
   } catch {
@@ -37,17 +42,33 @@ export function isGeminiInstalled(): boolean {
 }
 
 /**
- * Abort with a clear error message when the Gemini CLI is not installed.
+ * Abort with a clear error message when the provider CLI is not installed.
  *
- * Call this at the top of every execution path that needs the binary.
+ * @param provider - Provider adapter describing the binary and install command.
  */
-export function ensureGeminiInstalled(): void {
-  if (!isGeminiInstalled()) {
+export function ensureCliInstalled(provider: CliProvider): void {
+  if (!isCliInstalled(provider.binary)) {
     console.error(
-      "Error: Gemini CLI not found. Install it with: npm install -g @google/gemini-cli",
+      `Error: ${provider.displayName} not found. Install it with: ${provider.installCommand}`,
     );
     process.exit(1);
   }
+}
+
+/**
+ * @deprecated Use {@link isCliInstalled} with the active provider's binary.
+ * Retained for backward compatibility with earlier Gemini-only callers.
+ */
+export function isGeminiInstalled(): boolean {
+  return isCliInstalled("gemini");
+}
+
+/**
+ * @deprecated Use {@link ensureCliInstalled} with the active provider.
+ * Retained for backward compatibility with earlier Gemini-only callers.
+ */
+export function ensureGeminiInstalled(): void {
+  ensureCliInstalled(getProvider("gemini"));
 }
 
 /** Options for launching a Gemini CLI session. */
@@ -262,6 +283,7 @@ export function launchSession(
   config: GeminiPilotConfig,
   options: SessionOptions,
 ): void {
+  const provider = getProvider(config.provider);
   const model = resolveModel(config, options.tier);
   const projectRoot = options.projectRoot ?? findProjectRoot();
 
@@ -288,7 +310,7 @@ export function launchSession(
     approvalMode: options.approvalMode,
   });
 
-  const fullCommand = `gemini ${args.join(" ")}`;
+  const fullCommand = `${provider.binary} ${args.join(" ")}`;
 
   // Dry-run mode: show what would happen and exit
   if (options.dryRun) {
@@ -302,12 +324,12 @@ export function launchSession(
     return;
   }
 
-  // Ensure gemini CLI is available before attempting to launch
-  ensureGeminiInstalled();
+  // Ensure the provider CLI is available before attempting to launch
+  ensureCliInstalled(provider);
 
   const session = createSession(config, options);
 
-  log.info(`Launching Gemini CLI: ${fullCommand}`);
+  log.info(`Launching ${provider.displayName}: ${fullCommand}`);
   log.info(`Model: ${model} | Agent: ${options.agent?.name ?? "none"}`);
 
   hooks.emit("session-start", {
@@ -321,7 +343,7 @@ export function launchSession(
 
   // Use spawn with stdio: 'inherit' for a fully interactive session
   // (supports stdin/stdout/stderr passthrough to the terminal)
-  const child = spawn("gemini", args, {
+  const child = spawn(provider.binary, args, {
     stdio: "inherit",
     cwd: projectRoot,
     env: { ...process.env },
@@ -398,6 +420,7 @@ export function executePrompt(
   tier: ModelTier = "fast",
   dryRun = false,
 ): string {
+  const provider = getProvider(config.provider);
   const model = resolveModel(config, tier);
   const args = buildGeminiArgs({
     model,
@@ -406,7 +429,7 @@ export function executePrompt(
 
   args.push(prompt);
 
-  const fullCommand = `gemini ${args.join(" ")}`;
+  const fullCommand = `${provider.binary} ${args.join(" ")}`;
 
   if (dryRun) {
     printDryRun({
@@ -418,11 +441,11 @@ export function executePrompt(
     return "[DRY RUN] No output";
   }
 
-  // Ensure gemini CLI is available
-  ensureGeminiInstalled();
+  // Ensure the provider CLI is available
+  ensureCliInstalled(provider);
 
   try {
-    const result = execFileSync("gemini", args, {
+    const result = execFileSync(provider.binary, args, {
       encoding: "utf-8",
       timeout: 60000,
       stdio: ["pipe", "pipe", "inherit"],

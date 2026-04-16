@@ -14,12 +14,18 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
 import {
-  GeminiPilotConfigSchema,
-  type GeminiPilotConfig,
+  MultiCliPilotConfigSchema,
+  type MultiCliPilotConfig,
   DEFAULT_CONFIG,
+  ProviderIdSchema,
+  type ProviderId,
 } from "./schema.js";
 import { readJsonFile, getStateDir } from "../utils/fs.js";
 import { createLogger } from "../utils/logger.js";
+import { getProvider } from "../providers/index.js";
+
+/** Alias retained for older import sites. */
+type GeminiPilotConfig = MultiCliPilotConfig;
 
 const log = createLogger("config");
 
@@ -65,10 +71,46 @@ function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial
 }
 
 /**
- * Apply environment variable overrides.
+ * Swap model tier defaults to match the active provider when the user
+ * has not explicitly configured model ids.
+ *
+ * We consider a model "not explicitly configured" when it still equals
+ * the Gemini-family default baked into the Zod schema.  This keeps
+ * existing user configs untouched while giving Qwen users sensible
+ * model ids out of the box.
  */
-function applyEnvOverrides(config: GeminiPilotConfig): GeminiPilotConfig {
+function applyProviderDefaults(config: MultiCliPilotConfig): MultiCliPilotConfig {
+  const provider = getProvider(config.provider);
+  if (provider.id === "gemini") {
+    return config;
+  }
+  const geminiDefaults = DEFAULT_CONFIG.models;
+  const models = { ...config.models };
+  if (models.high === geminiDefaults.high) models.high = provider.defaultModels.high;
+  if (models.balanced === geminiDefaults.balanced) models.balanced = provider.defaultModels.balanced;
+  if (models.fast === geminiDefaults.fast) models.fast = provider.defaultModels.fast;
+  return { ...config, models };
+}
+
+/**
+ * Apply environment variable overrides.
+ *
+ * Supported variables:
+ *   - `MCP_PROVIDER` / `GP_PROVIDER` -- CLI provider ("gemini" or "qwen")
+ *   - `GP_MODEL_HIGH` / `GP_MODEL_BALANCED` / `GP_MODEL_FAST`
+ */
+function applyEnvOverrides(config: MultiCliPilotConfig): MultiCliPilotConfig {
   const result = { ...config, models: { ...config.models } };
+
+  const providerEnv = process.env.MCP_PROVIDER ?? process.env.GP_PROVIDER;
+  if (providerEnv) {
+    const parsed = ProviderIdSchema.safeParse(providerEnv);
+    if (parsed.success) {
+      result.provider = parsed.data as ProviderId;
+    } else {
+      log.warn(`Ignoring unknown provider env value: ${providerEnv}`);
+    }
+  }
 
   if (process.env.GP_MODEL_HIGH) {
     result.models.high = process.env.GP_MODEL_HIGH;
@@ -109,8 +151,11 @@ export function loadConfig(projectRoot?: string): GeminiPilotConfig {
   // Layer 3: Environment variables
   config = applyEnvOverrides(config);
 
+  // Layer 4: Provider-aware defaults (e.g. switch Gemini -> Qwen model ids)
+  config = applyProviderDefaults(config);
+
   // Validate final config
-  const parsed = GeminiPilotConfigSchema.safeParse(config);
+  const parsed = MultiCliPilotConfigSchema.safeParse(config);
   if (!parsed.success) {
     log.warn("Config validation issues, using defaults for invalid fields");
     return DEFAULT_CONFIG;
@@ -125,7 +170,7 @@ export function loadConfig(projectRoot?: string): GeminiPilotConfig {
 export function validateConfig(
   config: unknown,
 ): { valid: boolean; errors?: string[] } {
-  const result = GeminiPilotConfigSchema.safeParse(config);
+  const result = MultiCliPilotConfigSchema.safeParse(config);
   if (result.success) {
     return { valid: true };
   }

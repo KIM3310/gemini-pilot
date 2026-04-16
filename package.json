@@ -1,7 +1,7 @@
 {
-  "name": "gemini-pilot",
-  "version": "1.0.0",
-  "description": "Multi-agent orchestration harness for Gemini CLI -- prompts, workflows, and team coordination",
+  "name": "multi-cli-pilot",
+  "version": "2.0.0",
+  "description": "Multi-agent orchestration harness for CLI coding agents (Gemini, Qwen) -- prompts, workflows, team coordination, MCP, HUD.",
   "author": "Doeon Kim",
   "license": "MIT",
   "type": "module",
@@ -9,6 +9,8 @@
     "node": ">=20.0.0"
   },
   "bin": {
+    "mcp": "dist/cli/index.js",
+    "multi-cli-pilot": "dist/cli/index.js",
     "gp": "dist/cli/index.js",
     "gemini-pilot": "dist/cli/index.js"
   },
@@ -58,18 +60,21 @@
   "keywords": [
     "gemini",
     "gemini-cli",
+    "qwen",
+    "qwen-cli",
     "multi-agent",
     "orchestration",
     "ai",
     "workflow",
-    "prompt-engineering"
+    "prompt-engineering",
+    "mcp"
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/KIM3310/gemini-pilot.git"
+    "url": "git+https://github.com/KIM3310/multi-cli-pilot.git"
   },
-  "homepage": "https://github.com/KIM3310/gemini-pilot#readme",
+  "homepage": "https://github.com/KIM3310/multi-cli-pilot#readme",
   "bugs": {
-    "url": "https://github.com/KIM3310/gemini-pilot/issues"
+    "url": "https://github.com/KIM3310/multi-cli-pilot/issues"
   }
 }

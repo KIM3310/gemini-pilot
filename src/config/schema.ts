@@ -9,7 +9,12 @@
 
 import { z } from "zod";
 
-/** Model quality tier: "high" (3.1-pro), "balanced" (3.1-flash), or "fast" (3.1-flash-lite). */
+/** Supported CLI provider ids. Kept inline to avoid a circular import. */
+export const ProviderIdSchema = z.enum(["gemini", "qwen"]);
+/** Provider id type. */
+export type ProviderId = z.infer<typeof ProviderIdSchema>;
+
+/** Model quality tier: "high", "balanced", or "fast". */
 export const ModelTierSchema = z.enum(["high", "balanced", "fast"]);
 /** Model quality tier type. */
 export type ModelTier = z.infer<typeof ModelTierSchema>;
@@ -19,7 +24,13 @@ export const ApprovalModeSchema = z.enum(["full", "auto", "yolo"]);
 /** Approval mode type. */
 export type ApprovalMode = z.infer<typeof ApprovalModeSchema>;
 
-/** Model identifier mapping per tier. */
+/**
+ * Model identifier mapping per tier.
+ *
+ * Defaults target Gemini for backward compatibility; switching the
+ * provider to `qwen` overrides these at load time via
+ * {@link applyProviderDefaults}.
+ */
 export const ModelsConfigSchema = z.object({
   high: z.string().default("gemini-3.1-pro"),
   balanced: z.string().default("gemini-3.1-flash"),
@@ -47,8 +58,9 @@ export const TeamConfigSchema = z.object({
 /** Team configuration type. */
 export type TeamConfig = z.infer<typeof TeamConfigSchema>;
 
-/** Top-level Gemini Pilot configuration, combining all sections. */
-export const GeminiPilotConfigSchema = z.object({
+/** Top-level Multi-CLI Pilot configuration, combining all sections. */
+export const MultiCliPilotConfigSchema = z.object({
+  provider: ProviderIdSchema.default("gemini"),
   models: ModelsConfigSchema.default({}),
   session: SessionConfigSchema.default({}),
   team: TeamConfigSchema.default({}),
@@ -56,8 +68,17 @@ export const GeminiPilotConfigSchema = z.object({
   workflowsDir: z.string().optional(),
 });
 
-/** Full Gemini Pilot configuration type. */
-export type GeminiPilotConfig = z.infer<typeof GeminiPilotConfigSchema>;
+/** Full Multi-CLI Pilot configuration type. */
+export type MultiCliPilotConfig = z.infer<typeof MultiCliPilotConfigSchema>;
+
+/**
+ * Legacy alias preserved for backward compatibility with existing
+ * imports (`GeminiPilotConfig`, `GeminiPilotConfigSchema`).  Prefer
+ * the `MultiCliPilotConfig` names in new code.
+ */
+export const GeminiPilotConfigSchema = MultiCliPilotConfigSchema;
+/** @deprecated Use {@link MultiCliPilotConfig} instead. */
+export type GeminiPilotConfig = MultiCliPilotConfig;
 
 /** Default configuration with all fields set to their schema defaults. */
-export const DEFAULT_CONFIG: GeminiPilotConfig = GeminiPilotConfigSchema.parse({});
+export const DEFAULT_CONFIG: MultiCliPilotConfig = MultiCliPilotConfigSchema.parse({});

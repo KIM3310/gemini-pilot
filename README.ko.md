@@ -1,166 +1,177 @@
-![CI](https://github.com/KIM3310/gemini-pilot/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/KIM3310/multi-cli-pilot/actions/workflows/ci.yml/badge.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)
+![Providers](https://img.shields.io/badge/providers-Gemini%20%7C%20Qwen-7b61ff)
 
 [English](README.md) | [한국어](README.ko.md)
 
-# Gemini Pilot
+# Multi-CLI Pilot
 
-[Gemini CLI](https://github.com/google-gemini/gemini-cli)를 위한 멀티 에이전트 오케스트레이션 하네스 -- 프롬프트, 워크플로우, 팀 협업 관리.
+**하나의 오케스트레이션 하네스로 여러 코딩 에이전트 CLI를 조종합니다.**
+[Gemini CLI](https://github.com/google-gemini/gemini-cli)와
+[Qwen CLI](https://github.com/QwenLM/qwen-code)를 동일한 에이전트,
+워크플로우, 프롬프트, 훅, MCP, 팀 런타임으로 다룰 수 있습니다.
+
+> Multi-CLI Pilot은 기존 `gemini-pilot`과 `qwen-pilot`의 후속 저장소입니다.
+> 두 저장소는 여기로 통합되었으며, 기존 `gp` / `gemini-pilot` 명령과
+> `GeminiPilotConfig` 타입 별칭은 하위 호환을 위해 유지됩니다.
+
+## 왜 필요한가
+
+코딩 에이전트 CLI는 빠르게 쏟아지지만 각자 전용 에이전트, 워크플로우,
+tmux 스크립트를 따로 관리하게 됩니다. Multi-CLI Pilot은 **Provider
+어댑터**로 CLI를 추상화해, 어떤 CLI를 쓰더라도 하네스·HUD·MCP 서버·
+Tool-call 신뢰성 파이프라인이 그대로 동작합니다.
+
+## 아키텍처
+
+```mermaid
+flowchart LR
+  subgraph UX["UX"]
+    CLI[mcp / gp]
+    HUD[HUD display]
+  end
+
+  subgraph Core["Multi-CLI Pilot Core"]
+    Config[Config + Env<br/>provider, models, approval]
+    Agents[16 Agents + Registry]
+    Workflows[10 Workflows]
+    Hooks[Hook Manager]
+    Team[Team Coordinator<br/>plan/execute/verify/fix]
+    Harness[Harness<br/>session + metrics + state]
+    MCP[MCP Server<br/>tools exported]
+    ToolRel[Tool-Call Reliability<br/>parser + middleware]
+  end
+
+  subgraph Providers["Provider Adapters"]
+    Gemini[Gemini CLI<br/>gemini]
+    Qwen[Qwen CLI<br/>qwen]
+  end
+
+  CLI --> Config
+  CLI --> Workflows
+  CLI --> Agents
+  Config --> Harness
+  Harness --> Providers
+  Workflows --> Harness
+  Team --> Harness
+  Hooks --> Harness
+  MCP --> Harness
+  HUD --> Harness
+  ToolRel --> Harness
+```
 
 ## 주요 기능
 
-- **15개 전문 에이전트** -- 아키텍트, 실행자, 디버거, 리뷰어, 테스트 엔지니어 등 각 역할에 맞는 전용 프롬프트 제공.
-- **10개 내장 워크플로우** -- autopilot, deep-plan, sprint, investigate, tdd, review-cycle, refactor, deploy-prep, interview, team-sync.
-- **팀 협업 관리** -- 단계별 파이프라인(Plan, Execute, Verify, Fix)과 품질 게이트, 상태 공유.
-- **세션 관리** -- 승인 모드 설정(full / auto / yolo), 컨텍스트 주입, 사용량 지표.
-- **훅 시스템** -- 이벤트 기반 훅으로 하네스 동작 확장.
-- **MCP 서버** -- Model Context Protocol 통합으로 도구 기반 워크플로우 지원.
-- **상태 영속화** -- `.gemini-pilot/` 디렉토리에 JSON 기반 상태, 메모리, 노트패드 저장.
+- **16개 전문 에이전트** — 아키텍트, 실행자, 디버거, 리뷰어, 테스트 엔지니어 등.
+- **10개 내장 워크플로우** — autopilot, deep-plan, sprint, investigate, tdd, review-cycle, refactor, deploy-prep, interview, team-sync.
+- **Provider 어댑터** — config나 환경변수로 `gemini` / `qwen` 전환. 바이너리·기본 모델·설치 안내가 자동으로 교체됩니다.
+- **팀 협업 런타임** — Plan → Execute → Verify → Fix 파이프라인과 품질 게이트.
+- **세션 메트릭** — 프롬프트 수, 예상 토큰, 지연 샘플, 벽시계 경과를 세션 상태에 영속화.
+- **Tool-call 신뢰성** — Provider 무관하게 tool-call 출력을 견고화하는 파서와 미들웨어.
+- **훅 시스템** — session-start, session-end, error 등 이벤트 기반 확장.
+- **MCP 서버** — Model Context Protocol을 통해 외부 MCP 클라이언트에서 하네스 제어.
+- **HUD 대시보드** — tmux 연동 실시간 메트릭 표시.
+- **상태 영속화** — JSON 기반 상태·메모리·노트패드. 하위 호환을 위해 디렉터리 이름은 `.gemini-pilot/`로 유지.
 
 ## 설치
 
 ### macOS
-1. 이 저장소를 다운로드하거나 클론합니다
+1. 이 저장소를 클론하거나 다운로드합니다
 2. `Install-Mac.command`를 더블클릭합니다
-3. 완료! 터미널을 열고 `gp --help`를 입력하세요
+3. 터미널에서 `mcp --help`(또는 기존 `gp --help`) 실행
 
 ### Windows
-1. 이 저장소를 다운로드하거나 클론합니다
+1. 이 저장소를 클론하거나 다운로드합니다
 2. `Install-Windows.bat`를 더블클릭합니다
-3. 완료! CMD를 열고 `gp --help`를 입력하세요
+3. CMD에서 `mcp --help` 실행
 
 ### Linux
 ```bash
-git clone https://github.com/KIM3310/gemini-pilot.git
-cd gemini-pilot
+git clone https://github.com/KIM3310/multi-cli-pilot.git
+cd multi-cli-pilot
 chmod +x Install-Linux.sh && ./Install-Linux.sh
 ```
 
-### npm (대안)
+### npm
 ```bash
-npm install -g gemini-pilot
+npm install -g multi-cli-pilot
 ```
 
 ### 요구 사항
 
-- Node.js >= 20.0.0 (설치 프로그램이 없으면 자동으로 설치합니다)
-- [Gemini CLI](https://github.com/google-gemini/gemini-cli) v0.35.3+ (`npm install -g @google/gemini-cli`)
-  - 무료 티어: 60 req/min, 1,000 req/day
-  - 기본 모델: Gemini 3.1 Pro
-  - 1M 토큰 컨텍스트 윈도우
+- Node.js ≥ 20.0.0
+- 아래 CLI 중 하나가 `$PATH`에 있어야 합니다:
+  - **Gemini** — `npm install -g @google/gemini-cli` (기본, `gemini-3.1-pro` 계열)
+  - **Qwen** — `npm install -g @qwen-code/qwen-code` (`qwen3-coder-plus` 계열)
 
 ## 빠른 시작
 
 ```bash
-# CLI로 실행
-gp
+# 기본 Provider(Gemini)로 실행
+mcp
 
-# 또는 전체 명령어 사용
+# 이번 세션만 Qwen 사용
+MCP_PROVIDER=qwen mcp
+
+# 기존 별칭도 그대로 동작
+gp
 gemini-pilot
 ```
 
-## 프로젝트 구조
+## Provider 선택 규칙
 
-```
-gemini-pilot/
-  AGENTS.md          # 마스터 오케스트레이션 계약서
-  prompts/           # 15개 에이전트 역할 프롬프트 (마크다운)
-  workflows/         # 10개 워크플로우 정의 (프론트매터 포함 마크다운)
-  src/
-    agents/          # 에이전트 레지스트리
-    cli/             # CLI 진입점
-    config/          # 설정 로더 및 스키마
-    harness/         # 세션 하네스
-    hooks/           # 이벤트 훅 매니저
-    mcp/             # MCP 서버 통합
-    prompts/         # 프롬프트 파일 로더
-    state/           # 상태 매니저 및 스키마
-    team/            # 팀 코디네이터
-    utils/           # 로거, 마크다운 파서, 파일시스템 헬퍼
-    workflows/       # 워크플로우 엔진 및 레지스트리
-  __tests__/         # 테스트 스위트 (94개 테스트)
+다음 순서로 처음 발견되는 설정을 사용합니다.
+
+1. `MCP_PROVIDER` (혹은 기존 `GP_PROVIDER`) 환경변수
+2. 프로젝트 설정 `.gemini-pilot/config.json`의 `provider`
+3. 사용자 설정 `~/.config/gemini-pilot/config.json`의 `provider`
+4. 내장 기본값 (`gemini`)
+
+프로젝트 설정 예시:
+
+```jsonc
+{
+  "provider": "qwen",
+  "session": { "approvalMode": "auto", "defaultTier": "balanced" }
+}
 ```
 
-## 에이전트
+`provider`를 `qwen`으로 바꾸고 `models.*`를 직접 지정하지 않았다면,
+로더가 Qwen 기본 모델(`qwen3-coder-plus`/`qwen3-coder`/`qwen3-coder-flash`)로
+자동 교체합니다.
 
-| 에이전트 | 역할 |
+## 명령어
+
+| 명령어 | 설명 |
 |---|---|
-| architect | 시스템 설계 및 아키텍처 결정 |
-| planner | 작업 분해 및 계획 수립 |
-| executor | 코드 구현 |
-| debugger | 버그 조사 및 진단 |
-| reviewer | 코드 품질 리뷰 |
-| test-engineer | 테스트 작성 및 커버리지 관리 |
-| refactorer | 코드 구조 개선 |
-| optimizer | 성능 분석 및 최적화 |
-| security-auditor | 보안 평가 |
-| analyst | 데이터 및 요구사항 분석 |
-| designer | UI/UX 설계 가이드 |
-| documenter | 문서 작성 |
-| scientist | 연구 및 실험 |
-| critic | 건설적 코드 비평 |
-| mentor | 지식 전달 및 가이드 |
+| `mcp init` | `.gemini-pilot/` 스캐폴드 생성 |
+| `mcp` | 활성 Provider로 인터랙티브 세션 시작 |
+| `mcp config show` | 해석된 설정 출력 |
+| `mcp workflows list` | 사용 가능한 워크플로우 목록 |
+| `mcp workflows run <name>` | 워크플로우 실행 |
+| `mcp agents list` | 등록된 에이전트 목록 |
+| `mcp team` | tmux 기반 멀티 에이전트 팀 시작 |
 
-## 워크플로우
+## 하위 호환성
 
-| 워크플로우 | 트리거 | 설명 |
-|---|---|---|
-| autopilot | 명확하게 정의된 자동화 가능 작업 | 아이디어에서 검증된 코드까지 |
-| deep-plan | 다중 컴포넌트 전략 계획 | 심층 전략 분석 |
-| sprint | 집중적이고 시간 제한된 목표 | 스프린트 실행 |
-| investigate | 알 수 없는 근본 원인 | 체계적 증거 수집 |
-| tdd | 정확성이 중요한 기능 | 테스트 주도 개발 |
-| review-cycle | 병합 전 품질 검사 | 철저한 코드 리뷰 |
-| refactor | 구조적 개선 | 안전한 리팩토링 |
-| deploy-prep | 릴리스 준비 | 배포 체크리스트 |
-| interview | 모호한 요구사항 | 구조화된 명확화 |
-| team-sync | 병렬 작업 스트림 | 멀티 에이전트 협업 |
+- `gp` / `gemini-pilot` 바이너리 이름이 그대로 유지됩니다.
+- `GeminiPilotConfig` / `GeminiPilotConfigSchema`는 신규
+  `MultiCliPilotConfig` / `MultiCliPilotConfigSchema`에 대한
+  deprecated 별칭으로 유지됩니다.
+- 상태 디렉터리는 여전히 `.gemini-pilot/`이라 기존 프로젝트는 마이그레이션이 필요 없습니다.
 
 ## 개발
 
 ```bash
-# 의존성 설치
 npm install
-
-# 테스트 실행
-npm test
-
-# 감시 모드
-npm run test:watch
-
-# 타입 검사
-npm run lint
-
-# 빌드
-npm run build
+npm run typecheck      # strict TypeScript
+npm test               # config, harness, team, MCP 등 225개 테스트
+npm run lint           # biome
+npm run build          # dist/로 빌드
 ```
-
-## 도구 호출 최적화 (Tool Calling Optimization)
-
-15개 모든 에이전트 프롬프트에 **도구 호출 프로토콜(Tool Calling Protocol)** 섹션이 추가되어, Gemini가 첫 시도에서 올바르고 파싱 가능한 도구 호출을 생성하는 능력이 향상되었습니다. 이 최적화는 기본 프롬프트 대비 **10-12% 성공률 향상**을 목표로 합니다.
-
-### 변경 사항
-
-각 에이전트 프롬프트에 다음이 추가되었습니다:
-
-- **도구 호출 프로토콜** -- 유효한 JSON, 정확한 타입 매칭, 필수 파라미터 강제, 호출 전 검증을 위한 범용 규칙.
-- **역할별 도구 가이드** -- 각 에이전트의 도메인에 맞춤화된 구체적 팁 (예: 디버거는 정규식 검색 가이드, 테스트 엔지니어는 매처 이름 규칙, 보안 감사자는 CWE/semver 형식 규칙).
-- **추론 프로토콜** -- 모든 도구 호출 전에 따르는 구조화된 사고 패턴 (목표, 도구 선택, 파라미터 열거, 인수 구성, 실행).
-- **BFCL 정렬 패턴** -- Berkeley Function Calling Leaderboard 인사이트 기반: 명시적 타입 어노테이션, 다단계 체인의 의존성 추적, 병렬 vs 순차 호출 판단 가이드, 선택적 파라미터 처리.
-
-### 왜 10-12%인가
-
-개선 추정치는 함수 호출 벤치마크에서 가장 흔한 실패 모드를 해결한 결과입니다:
-- **타입 불일치** (~4%): `42` 대신 `"42"` 전달, 또는 문자열이 기대되는 곳에 숫자 전달.
-- **필수 파라미터 누락** (~3%): 스키마에서 필수로 표시된 필드 생략.
-- **잘못된 JSON** (~2%): 후행 쉼표, 작은따옴표, JSON 인수 내 주석.
-- **파라미터 이름 오류** (~1-2%): camelCase vs. snake_case 불일치, 축약된 이름.
-- **재시도 시 범위 확장** (~1%): 오류 후 재시도할 때 이미 올바른 파라미터 변경.
-
-전체 범용 프로토콜은 `AGENTS.md`, 에이전트별 구현은 `prompts/`를 참조하세요.
 
 ## 라이선스
 
-[MIT](LICENSE) -- Copyright (c) 2025 Doeon Kim
+MIT — [LICENSE](LICENSE) 참조.

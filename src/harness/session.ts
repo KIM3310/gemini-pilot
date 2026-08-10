@@ -5,7 +5,7 @@
  * @module harness/session
  */
 
-import { execFileSync, execSync, spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import * as path from "node:path";
 import type { AgentDefinition } from "../agents/registry.js";
@@ -35,9 +35,9 @@ const log = createLogger("harness");
  */
 export function isCliInstalled(binary = "gemini"): boolean {
   try {
-    const checkCmd =
-      process.platform === "win32" ? `where ${binary}` : `which ${binary}`;
-    execSync(checkCmd, { stdio: "pipe" });
+    const locator = process.platform === "win32" ? "where" : "which";
+    const args = process.platform === "win32" ? [binary] : ["--", binary];
+    execFileSync(locator, args, { stdio: "pipe" });
     return true;
   } catch {
     return false;

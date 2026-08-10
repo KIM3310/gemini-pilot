@@ -97,27 +97,116 @@ export function parseToolCalls(
 }
 
 /**
+ * A tagged region extracted from the XML-like tool-call format.
+ */
+interface TaggedContent {
+  tag: string;
+  content: string;
+}
+
+/**
+ * Test a single character for JavaScript whitespace without a repeating regex.
+ */
+function isWhitespaceCharacter(character: string): boolean {
+  return character.length > 0 && character.trim() === "";
+}
+
+/**
+ * Return the content start for an opening tag at `index`, if it is valid.
+ * Tool-call XML permits whitespace before `>` but does not permit attributes.
+ */
+function openingTagContentStart(
+  text: string,
+  index: number,
+  tag: string,
+): number | undefined {
+  const prefix = `<${tag}`;
+  if (!text.startsWith(prefix, index)) return undefined;
+
+  let cursor = index + prefix.length;
+  while (cursor < text.length && isWhitespaceCharacter(text[cursor] ?? "")) {
+    cursor++;
+  }
+
+  return text[cursor] === ">" ? cursor + 1 : undefined;
+}
+
+/**
+ * Extract non-nested tagged regions in one forward pass.
+ *
+ * A scanner is used instead of a lazy `.*`-style regular expression so
+ * malformed model output with many unmatched opening tags is handled in
+ * linear time.
+ */
+function extractTaggedContents(
+  text: string,
+  tags: readonly string[],
+): TaggedContent[] {
+  const extracted: TaggedContent[] = [];
+  let openTag: string | undefined;
+  let contentStart = 0;
+  let cursor = 0;
+
+  while (cursor < text.length) {
+    const marker = text.indexOf("<", cursor);
+    if (marker === -1) break;
+
+    if (openTag !== undefined) {
+      const closingTag = `</${openTag}>`;
+      if (text.startsWith(closingTag, marker)) {
+        extracted.push({
+          tag: openTag,
+          content: text.slice(contentStart, marker),
+        });
+        openTag = undefined;
+        cursor = marker + closingTag.length;
+        continue;
+      }
+
+      cursor = marker + 1;
+      continue;
+    }
+
+    let foundOpeningTag = false;
+    for (const tag of tags) {
+      const nextContentStart = openingTagContentStart(text, marker, tag);
+      if (nextContentStart !== undefined) {
+        openTag = tag;
+        contentStart = nextContentStart;
+        cursor = nextContentStart;
+        foundOpeningTag = true;
+        break;
+      }
+    }
+
+    if (!foundOpeningTag) cursor = marker + 1;
+  }
+
+  return extracted;
+}
+
+/**
  * Extract tool calls from XML format.
  * Matches: <tool_call><name>X</name><arguments>{...}</arguments></tool_call>
  * Also matches: <function_call>...</function_call>
  */
 function extractXmlToolCalls(text: string): ToolCall[] {
   const calls: ToolCall[] = [];
-  const xmlPattern =
-    /<(?:tool_call|function_call)\s*>([\s\S]*?)<\/(?:tool_call|function_call)>/g;
+  const regions = extractTaggedContents(text, ["tool_call", "function_call"]);
 
-  let match = xmlPattern.exec(text);
-  while (match !== null) {
-    const inner = match[1] ?? "";
-    const nameMatch = /<name\s*>([\s\S]*?)<\/name>/.exec(inner);
-    const argsMatch = /<arguments?\s*>([\s\S]*?)<\/arguments?>/.exec(inner);
+  for (const region of regions) {
+    const nameRegion = extractTaggedContents(region.content, ["name"])[0];
+    const argsRegion = extractTaggedContents(region.content, [
+      "arguments",
+      "argument",
+    ])[0];
 
-    if (nameMatch) {
-      const name = nameMatch[1]?.trim();
+    if (nameRegion) {
+      const name = nameRegion.content.trim();
       let args: Record<string, unknown> = {};
 
-      if (argsMatch) {
-        const argsText = argsMatch[1]?.trim();
+      if (argsRegion) {
+        const argsText = argsRegion.content.trim();
         const parsed = rjsonParse(argsText);
         if (
           parsed.ok &&
@@ -130,10 +219,94 @@ function extractXmlToolCalls(text: string): ToolCall[] {
 
       calls.push({ name, arguments: args });
     }
-    match = xmlPattern.exec(text);
   }
 
   return calls;
+}
+
+const MARKDOWN_FENCE_LANGUAGES = ["json", "JSON", "javascript", "js"] as const;
+
+/**
+ * Find a valid opening fence on a line. The original accepted a fence anywhere
+ * on the line, followed by an optional supported language and whitespace.
+ */
+function findOpeningFence(
+  text: string,
+  lineStart: number,
+  lineEnd: number,
+): number | undefined {
+  let headerEnd = lineEnd;
+  while (
+    headerEnd > lineStart &&
+    isWhitespaceCharacter(text[headerEnd - 1] ?? "")
+  ) {
+    headerEnd--;
+  }
+
+  const plainFenceStart = headerEnd - 3;
+  if (plainFenceStart >= lineStart && text.startsWith("```", plainFenceStart)) {
+    return plainFenceStart;
+  }
+
+  for (const language of MARKDOWN_FENCE_LANGUAGES) {
+    const fenceStart = headerEnd - language.length - 3;
+    if (
+      fenceStart >= lineStart &&
+      text.startsWith("```", fenceStart) &&
+      text.startsWith(language, fenceStart + 3)
+    ) {
+      return fenceStart;
+    }
+  }
+
+  return undefined;
+}
+
+/** Find a closing fence whose line prefix contains only whitespace. */
+function findClosingFence(
+  text: string,
+  lineStart: number,
+  lineEnd: number,
+): number | undefined {
+  let cursor = lineStart;
+  while (cursor < lineEnd && isWhitespaceCharacter(text[cursor] ?? "")) {
+    cursor++;
+  }
+  return text.startsWith("```", cursor) ? cursor : undefined;
+}
+
+/**
+ * Extract fenced markdown bodies with a line-oriented, single-pass scanner.
+ */
+function extractMarkdownCodeBlocks(text: string): string[] {
+  const blocks: string[] = [];
+  let contentStart: number | undefined;
+  let lineStart = 0;
+
+  while (lineStart < text.length) {
+    const newline = text.indexOf("\n", lineStart);
+    const hasNewline = newline !== -1;
+    const lineEnd = hasNewline ? newline : text.length;
+
+    if (contentStart === undefined) {
+      // The supported opening form requires a newline after the fence header.
+      if (
+        hasNewline &&
+        findOpeningFence(text, lineStart, lineEnd) !== undefined
+      ) {
+        contentStart = lineEnd + 1;
+      }
+    } else if (findClosingFence(text, lineStart, lineEnd) !== undefined) {
+      const contentEnd = lineStart > contentStart ? lineStart - 1 : lineStart;
+      blocks.push(text.slice(contentStart, contentEnd));
+      contentStart = undefined;
+    }
+
+    if (!hasNewline) break;
+    lineStart = lineEnd + 1;
+  }
+
+  return blocks;
 }
 
 /**
@@ -141,17 +314,13 @@ function extractXmlToolCalls(text: string): ToolCall[] {
  */
 function extractMarkdownToolCalls(text: string): ToolCall[] {
   const calls: ToolCall[] = [];
-  const mdPattern = /```(?:json|JSON|javascript|js)?\s*\n([\s\S]*?)\n\s*```/g;
 
-  let match = mdPattern.exec(text);
-  while (match !== null) {
-    const content = match[1]?.trim();
-    const parsed = rjsonParse(content);
+  for (const content of extractMarkdownCodeBlocks(text)) {
+    const parsed = rjsonParse(content.trim());
     if (parsed.ok) {
       const extracted = extractCallsFromValue(parsed.value);
       calls.push(...extracted);
     }
-    match = mdPattern.exec(text);
   }
 
   return calls;

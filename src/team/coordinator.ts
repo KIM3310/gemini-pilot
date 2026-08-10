@@ -7,7 +7,7 @@
  * @module team/coordinator
  */
 
-import { type ChildProcess, execSync } from "node:child_process";
+import { type ChildProcess, execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import type { GeminiPilotConfig } from "../config/schema.js";
 import { ensureGeminiInstalled } from "../harness/session.js";
@@ -34,9 +34,9 @@ export interface WorkerInfo {
  */
 function commandExists(cmd: string): boolean {
   try {
-    const checkCmd =
-      process.platform === "win32" ? `where ${cmd}` : `which ${cmd}`;
-    execSync(checkCmd, { stdio: "pipe" });
+    const locator = process.platform === "win32" ? "where" : "which";
+    const args = process.platform === "win32" ? [cmd] : ["--", cmd];
+    execFileSync(locator, args, { stdio: "pipe" });
     return true;
   } catch {
     return false;
@@ -62,7 +62,9 @@ export function isInTmux(): boolean {
  */
 export function createTmuxSession(sessionName: string): boolean {
   try {
-    execSync(`tmux new-session -d -s "${sessionName}"`, { stdio: "pipe" });
+    execFileSync("tmux", ["new-session", "-d", "-s", sessionName], {
+      stdio: "pipe",
+    });
     log.info(`Created tmux session: ${sessionName}`);
     return true;
   } catch (err) {
@@ -76,8 +78,9 @@ export function createTmuxSession(sessionName: string): boolean {
  */
 export function createTmuxPane(sessionName: string): string | undefined {
   try {
-    const result = execSync(
-      `tmux split-window -t "${sessionName}" -P -F "#{pane_id}"`,
+    const result = execFileSync(
+      "tmux",
+      ["split-window", "-t", sessionName, "-P", "-F", "#{pane_id}"],
       { encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] },
     );
     const paneId = result.trim();
@@ -94,9 +97,7 @@ export function createTmuxPane(sessionName: string): string | undefined {
  */
 export function sendToTmuxPane(paneId: string, command: string): void {
   try {
-    // Use -- to prevent argument injection via paneId and pass command safely
-    const escaped = command.replace(/'/g, "'\\''");
-    execSync(`tmux send-keys -t '${paneId}' '${escaped}' Enter`, {
+    execFileSync("tmux", ["send-keys", "-t", paneId, "--", command, "Enter"], {
       stdio: "pipe",
     });
   } catch (err) {
@@ -105,11 +106,24 @@ export function sendToTmuxPane(paneId: string, command: string): void {
 }
 
 /**
+ * Quote one argument for the POSIX shell running inside a tmux pane.
+ *
+ * `execFileSync` protects the local tmux invocation, but `send-keys` types its
+ * payload into an interactive shell. Single-quoting the user-selected role
+ * keeps it one literal argument when that shell evaluates the command.
+ */
+function quotePosixShellArgument(argument: string): string {
+  return `'${argument.replaceAll("'", `'"'"'`)}'`;
+}
+
+/**
  * Kill a tmux session.
  */
 export function killTmuxSession(sessionName: string): void {
   try {
-    execSync(`tmux kill-session -t "${sessionName}"`, { stdio: "pipe" });
+    execFileSync("tmux", ["kill-session", "-t", sessionName], {
+      stdio: "pipe",
+    });
     log.info(`Killed tmux session: ${sessionName}`);
   } catch {
     // Session may already be gone
@@ -258,8 +272,9 @@ export function launchTeam(
 
   // The first pane is the default pane of the session; get its ID
   try {
-    const firstPane = execSync(
-      `tmux list-panes -t "${sessionName}" -F "#{pane_id}"`,
+    const firstPane = execFileSync(
+      "tmux",
+      ["list-panes", "-t", sessionName, "-F", "#{pane_id}"],
       { encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] },
     )
       .trim()
@@ -276,13 +291,16 @@ export function launchTeam(
 
   // Tile the panes evenly
   try {
-    execSync(`tmux select-layout -t "${sessionName}" tiled`, { stdio: "pipe" });
+    execFileSync("tmux", ["select-layout", "-t", sessionName, "tiled"], {
+      stdio: "pipe",
+    });
   } catch {
     // Layout may fail with few panes, non-fatal
   }
 
-  // Send the harness command to each pane
-  const role = options.role ?? "executor";
+  // Send the harness command to each pane. The command is interpreted by the
+  // pane's shell, so quote the user-controlled role independently.
+  const role = quotePosixShellArgument(options.role ?? "executor");
   for (const paneId of paneIds) {
     sendToTmuxPane(paneId, `gp harness --agent ${role}`);
   }

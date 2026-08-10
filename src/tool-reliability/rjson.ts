@@ -80,13 +80,26 @@ function stripComments(src: string): string {
  */
 function stripCodeFences(src: string): string {
   const trimmed = src.trim();
-  const fencePattern =
-    /^```(?:json|JSON|javascript|js)?\s*\n?([\s\S]*?)\n?\s*```$/;
-  const match = fencePattern.exec(trimmed);
-  if (match) {
-    return match[1] ?? "";
+  if (
+    trimmed.length < 6 ||
+    !trimmed.startsWith("```") ||
+    !trimmed.endsWith("```")
+  ) {
+    return trimmed;
   }
-  return trimmed;
+
+  let contentStart = 3;
+  const contentEnd = trimmed.length - 3;
+  for (const language of ["json", "JSON", "javascript", "js"]) {
+    if (trimmed.startsWith(language, contentStart)) {
+      contentStart += language.length;
+      break;
+    }
+  }
+
+  // JSON.parse already accepts surrounding whitespace. Trimming it here also
+  // mirrors the whitespace consumed around the body by the former regex.
+  return trimmed.slice(contentStart, contentEnd).trim();
 }
 
 /**

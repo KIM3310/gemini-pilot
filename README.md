@@ -2,7 +2,7 @@
 
 ## Live Demo
 
-- [Open the public GitHub Pages demo](https://multi-cli-pilot.pages.dev/)
+- [Open the public Cloudflare Pages demo](https://multi-cli-pilot.pages.dev/)
 - Scope: credential-free, synthetic-data demo for reviewers and evaluators.
 
 ![CI](https://github.com/KIM3310/multi-cli-pilot/actions/workflows/ci.yml/badge.svg)
@@ -12,8 +12,6 @@
 ![Providers](https://img.shields.io/badge/providers-Gemini%20%7C%20Qwen-7b61ff)
 
 [English](README.md) | [한국어](README.ko.md)
-
-# Multi-CLI Pilot
 
 **One orchestration harness, multiple coding-agent CLIs.** Drive
 [Gemini CLI](https://github.com/google-gemini/gemini-cli) or
@@ -32,7 +30,6 @@ A multi-agent CLI harness that shows how complex coding work can be coordinated 
 | Area | Details |
 |---|---|
 | Users | Engineering teams, automation leads, and internal platform groups experimenting with agent-assisted development. |
-| Technical path | Validate the demo, README, architecture notes, and quality gate before deeper workflow review. |
 | System scope | Prompt management, workflows, coordination, task queues, and MCP support in a reviewable CLI surface. |
 | Operating boundary | Agent output remains advisory and approval-required; production repositories should keep human approval and CI gates. |
 | Evaluation path | Run the local test/build scripts and inspect the workflow examples and coordination docs. |
@@ -212,7 +209,7 @@ multi-cli-pilot/
     tool-reliability/ # Tool-call parser + middleware
     utils/            # fs, logger, small helpers
     workflows/        # Workflow runner
-  __tests__/          # Vitest test suite (225 tests)
+  __tests__/          # Vitest unit and integration suite
 ```
 
 ## Commands
@@ -242,7 +239,7 @@ multi-cli-pilot/
 ```bash
 npm install
 npm run typecheck      # strict TypeScript
-npm test               # 225 tests across config, harness, team, MCP, …
+npm test               # Current config, harness, team, and MCP suites
 npm run lint           # biome
 npm run build          # emit to dist/
 ```

@@ -12,7 +12,7 @@
   <meta property="og:title" content="Project Guide | Multi-CLI Pilot">
   <meta property="og:description" content="Free multi-CLI reliability worksheet for comparing tool adapters and terminal workflows. Source-backed guide for developer-tool builders and agent runtime teams.">
   <meta property="og:url" content="https://multi-cli-pilot.pages.dev/guide">
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Project Guide | Multi-CLI Pilot","description":"Free multi-CLI reliability worksheet for comparing tool adapters and terminal workflows. Source-backed guide for developer-tool builders and agent runtime teams.","url":"https://multi-cli-pilot.pages.dev/guide","dateModified":"2026-07-28","author":{"@type":"Person","name":"KIM3310","url":"https://github.com/KIM3310"},"publisher":{"@type":"Person","name":"KIM3310","url":"https://kim3310-doeon-kim-portfolio.pages.dev"},"isAccessibleForFree":true}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Project Guide | Multi-CLI Pilot","description":"Free multi-CLI reliability worksheet for comparing tool adapters and terminal workflows. Source-backed guide for developer-tool builders and agent runtime teams.","url":"https://multi-cli-pilot.pages.dev/guide","dateModified":"2026-07-28","author":{"@type":"Person","name":"Doeon Kim","alternateName":"KIM3310","url":"https://github.com/KIM3310","sameAs":["https://kim3310-doeon-kim-portfolio.pages.dev","https://www.linkedin.com/in/doeon-kim-4742a2388"]},"publisher":{"@type":"Person","name":"Doeon Kim","alternateName":"KIM3310","url":"https://kim3310-doeon-kim-portfolio.pages.dev","sameAs":["https://github.com/KIM3310","https://www.linkedin.com/in/doeon-kim-4742a2388"]},"isAccessibleForFree":true}</script>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4973160293737562" crossorigin="anonymous"></script>
   <style>
     :root { color-scheme: light; --ink: #17201f; --muted: #52605d; --line: #cbd2ce; --paper: #ffffff; --ground: #f5f6f4; --green: #126455; --coral: #c94732; --gold: #b67a00; }
@@ -74,13 +74,12 @@
     </header>
 
     <article><h3>Live Demo</h3>
-<ul><li><a href="https://multi-cli-pilot.pages.dev/" rel="noopener">Open the public GitHub Pages demo</a></li><li>Scope: credential-free, synthetic-data demo for reviewers and evaluators.</li></ul>
-<h2>Multi-CLI Pilot</h2>
+<ul><li><a href="https://multi-cli-pilot.pages.dev/" rel="noopener">Open the public Cloudflare Pages demo</a></li><li>Scope: credential-free, synthetic-data demo for reviewers and evaluators.</li></ul>
 <p><strong>One orchestration harness, multiple coding-agent CLIs.</strong> Drive <a href="https://github.com/google-gemini/gemini-cli" rel="noopener">Gemini CLI</a> or <a href="https://github.com/QwenLM/qwen-code" rel="noopener">Qwen CLI</a> from the same agents, workflows, prompts, hooks, MCP tools, and team primitives.</p>
 <p>Multi-CLI Pilot is the successor to <code>gemini-pilot</code> and <code>qwen-pilot</code>. Both repos have been consolidated here and the Gemini-only APIs are preserved as deprecated aliases — existing <code>gp</code> / <code>gemini-pilot</code> commands continue to work.</p>
 <h3>System Overview</h3>
 <p>A multi-agent CLI harness that shows how complex coding work can be coordinated without losing traceability.</p>
-<div class="table-scroll"><table><thead><tr><th>Area</th><th>Details</th></tr></thead><tbody><tr><td>Users</td><td>Engineering teams, automation leads, and internal platform groups experimenting with agent-assisted development.</td></tr><tr><td>Technical path</td><td>Validate the demo, README, architecture notes, and quality gate before deeper workflow review.</td></tr><tr><td>System scope</td><td>Prompt management, workflows, coordination, task queues, and MCP support in a reviewable CLI surface.</td></tr><tr><td>Operating boundary</td><td>Agent output remains advisory and approval-required; production repositories should keep human approval and CI gates.</td></tr><tr><td>Evaluation path</td><td>Run the local test/build scripts and inspect the workflow examples and coordination docs.</td></tr></tbody></table></div>
+<div class="table-scroll"><table><thead><tr><th>Area</th><th>Details</th></tr></thead><tbody><tr><td>Users</td><td>Engineering teams, automation leads, and internal platform groups experimenting with agent-assisted development.</td></tr><tr><td>System scope</td><td>Prompt management, workflows, coordination, task queues, and MCP support in a reviewable CLI surface.</td></tr><tr><td>Operating boundary</td><td>Agent output remains advisory and approval-required; production repositories should keep human approval and CI gates.</td></tr><tr><td>Evaluation path</td><td>Run the local test/build scripts and inspect the workflow examples and coordination docs.</td></tr></tbody></table></div>
 <h3>Evaluation Path</h3>
 <ul><li><strong>Start here:</strong> Run a simple workflow, then inspect how provider switching and team coordination are represented.</li><li><strong>Local demo:</strong> Run the installer or <code>npm install &amp;&amp; npm run build</code>, then use the CLI examples under Quick Start.</li><li><strong>Checks:</strong> Run <code>npm run verify</code>; it covers lint, typecheck, tests, and build.</li></ul>
 <h3>Architecture Notes</h3>
@@ -186,7 +185,7 @@ gemini-pilot</code></pre>
     tool-reliability/ # Tool-call parser + middleware
     utils/            # fs, logger, small helpers
     workflows/        # Workflow runner
-  __tests__/          # Vitest test suite (225 tests)</code></pre>
+  __tests__/          # Vitest unit and integration suite</code></pre>
 <h3>Commands</h3>
 <div class="table-scroll"><table><thead><tr><th>Command</th><th>Description</th></tr></thead><tbody><tr><td><code>mcp init</code></td><td>Scaffold <code>.gemini-pilot/</code> with config, memory, workflows</td></tr><tr><td><code>mcp</code></td><td>Launch an interactive session with the active provider</td></tr><tr><td><code>mcp config show</code></td><td>Print the resolved configuration</td></tr><tr><td><code>mcp workflows list</code></td><td>List available workflows</td></tr><tr><td><code>mcp workflows run &lt;name&gt;</code></td><td>Execute a workflow end-to-end</td></tr><tr><td><code>mcp agents list</code></td><td>List registered agents</td></tr><tr><td><code>mcp team</code></td><td>Start a tmux-based multi-agent team</td></tr></tbody></table></div>
 <h3>Backward Compatibility</h3>
@@ -197,7 +196,7 @@ gemini-pilot</code></pre>
 <h3>Development</h3>
 <pre><code>npm install
 npm run typecheck      # strict TypeScript
-npm test               # 225 tests across config, harness, team, MCP, …
+npm test               # Current config, harness, team, and MCP suites
 npm run lint           # biome
 npm run build          # emit to dist/</code></pre>
 <h3>Cloud + AI Architecture</h3>
